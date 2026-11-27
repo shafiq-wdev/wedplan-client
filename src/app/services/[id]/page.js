@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
+  Ban,
   LockKeyhole,
   MapPin,
   Tag,
@@ -109,7 +110,9 @@ export default async function ServiceDetailsPage({ params }) {
             <div className="flex flex-col p-6 sm:p-8 lg:p-10">
               <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-rose-500">
                 <BadgeCheck className="h-4 w-4" />
-                Approved & active listing
+                {service.isAvailable
+                  ? "Approved & accepting bookings"
+                  : "Approved listing · bookings paused"}
               </div>
 
               <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl">
@@ -171,11 +174,41 @@ export default async function ServiceDetailsPage({ params }) {
 
               <div className="mt-7">
                 {role === "customer" ? (
-                  <BookingForm
-                    serviceId={service.id}
-                    serviceTitle={service.title}
-                    vendorName={service.vendorName}
-                  />
+                  service.isAvailable ? (
+                    <BookingForm
+                      serviceId={service.id}
+                      serviceTitle={service.title}
+                      vendorName={service.vendorName}
+                      customerName={session.user.name}
+                      customerEmail={session.user.email}
+                      serviceLocation={service.location}
+                    />
+                  ) : (
+                    <div className="rounded-3xl border border-amber-200 bg-amber-50/70 p-6">
+                      <div className="flex items-start gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-amber-600 shadow-sm">
+                          <Ban className="h-5 w-5" />
+                        </span>
+                        <div>
+                          <h3 className="font-semibold text-slate-900">
+                            Not accepting bookings right now
+                          </h3>
+                          <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                            The vendor has paused this service. Explore other
+                            available listings or check back later.
+                          </p>
+                        </div>
+                      </div>
+
+                      <Link
+                        href="/services"
+                        className="group mt-5 inline-flex items-center gap-2 text-sm font-semibold text-rose-600 transition hover:text-rose-700"
+                      >
+                        Explore available services
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                      </Link>
+                    </div>
+                  )
                 ) : (
                   <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-6">
                     <div className="flex items-start gap-3">
