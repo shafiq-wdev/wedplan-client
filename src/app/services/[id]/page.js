@@ -1,20 +1,22 @@
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { ObjectId } from "mongodb";
 import {
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
-  CalendarHeart,
   MapPin,
   Sparkles,
   Tag,
 } from "lucide-react";
 
+import BookingRequestButton from "@/components/services/BookingRequestButton";
 import CategoryIcon from "@/components/services/CategoryIcon";
 import ServiceCard from "@/components/services/ServiceCard";
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
   getCategoryQueryValues,
@@ -45,6 +47,14 @@ function vendorInitials(name) {
 
 export default async function ServiceDetailsPage({ params }) {
   await connection();
+
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    redirect("/sign-in");
+  }
 
   const { id } = await params;
 
@@ -186,14 +196,7 @@ export default async function ServiceDetailsPage({ params }) {
               )}
 
               <div className="mt-auto flex flex-col gap-3 pt-7 sm:flex-row">
-                <Link
-                  href="/sign-in"
-                  className="group inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-200 transition hover:-translate-y-0.5 hover:from-rose-400 hover:to-pink-400"
-                >
-                  <CalendarHeart className="h-4 w-4" />
-                  Sign in to book
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
+                <BookingRequestButton serviceTitle={service.title} />
 
                 <Link
                   href={`/services?category=${service.categorySlug}`}
