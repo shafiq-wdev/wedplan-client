@@ -18,6 +18,7 @@ import StatusBadge from "@/components/dashboard/StatusBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { backendApi } from "@/lib/backend-auth";
 import { uploadImageToImgBB } from "@/lib/image-upload";
 import { SERVICE_CATEGORIES } from "@/lib/services";
 import { cn } from "cn";
@@ -112,19 +113,13 @@ export default function VendorServicesManager({
         images: [imageUrl],
       };
 
-      const response = await fetch(
+      const data = await backendApi(
         editingId ? `/api/vendor/services/${editingId}` : "/api/vendor/services",
         {
           method: editingId ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }
       );
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Unable to save service.");
-      }
 
       setServices((current) =>
         editingId
@@ -150,16 +145,10 @@ export default function VendorServicesManager({
     setBusyId(service.id);
 
     try {
-      const response = await fetch(`/api/vendor/services/${service.id}`, {
+      const data = await backendApi(`/api/vendor/services/${service.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isAvailable: !service.isAvailable }),
       });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Unable to update availability.");
-      }
 
       setServices((current) =>
         current.map((item) =>
@@ -188,14 +177,9 @@ export default function VendorServicesManager({
     setBusyId(service.id);
 
     try {
-      const response = await fetch(`/api/vendor/services/${service.id}`, {
+      await backendApi(`/api/vendor/services/${service.id}`, {
         method: "DELETE",
       });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Unable to delete service.");
-      }
 
       setServices((current) => current.filter((item) => item.id !== service.id));
       toast.success("Service deleted.");

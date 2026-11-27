@@ -29,6 +29,7 @@ import {
 
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { authClient } from "@/lib/auth-client";
+import { clearBackendToken } from "@/lib/backend-auth";
 import { getDashboardPath, getRoleLabel } from "@/lib/roles";
 
 const publicLinks = [
@@ -89,6 +90,8 @@ export default function Navbar({ user: userProp = null, onLogout }) {
           throw new Error(error.message || "Logout failed.");
         }
       }
+
+      await clearBackendToken();
 
       setOpen(false);
       setMobileMenuOpen(false);
