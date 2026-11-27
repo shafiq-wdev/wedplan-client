@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Loader2, Search, Trash2, UserRound } from "lucide-react";
+import { Ban, Loader2, Search, ShieldCheck, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -120,6 +120,41 @@ export default function UsersManager({ currentUserId, initialRole = "all" }) {
     }
   };
 
+  const toggleBlock = async (user) => {
+    const nextBlocked = !user.isBlocked;
+
+    setBusyId(user.id);
+
+    try {
+      const response = await fetch(`/api/admin/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isBlocked: nextBlocked }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to update user status.");
+      }
+
+      setUsers((current) =>
+        current.map((item) =>
+          item.id === user.id ? { ...item, isBlocked: nextBlocked } : item
+        )
+      );
+
+      toast.success(
+        nextBlocked
+          ? `${user.name || user.email} is now blocked.`
+          : `${user.name || user.email} can access the platform again.`
+      );
+    } catch (blockError) {
+      toast.error(blockError.message);
+    } finally {
+      setBusyId("");
+    }
+  };
+
   const deleteUser = async (user) => {
     const confirmed = window.confirm(
       `Delete ${user.name || user.email}? This removes the account and all sessions.`
@@ -206,6 +241,7 @@ export default function UsersManager({ currentUserId, initialRole = "all" }) {
               <tr>
                 <th className="px-4 py-3 font-semibold">User</th>
                 <th className="px-4 py-3 font-semibold">Role</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
                 <th className="px-4 py-3 font-semibold">Joined</th>
                 <th className="px-4 py-3 text-right font-semibold">Actions</th>
               </tr>
@@ -214,7 +250,7 @@ export default function UsersManager({ currentUserId, initialRole = "all" }) {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center">
+                  <td colSpan={5} className="px-4 py-12 text-center">
                     <Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" />
                     <p className="mt-2 text-sm text-slate-500">
                       Loading users...
@@ -223,7 +259,7 @@ export default function UsersManager({ currentUserId, initialRole = "all" }) {
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center">
+                  <td colSpan={5} className="px-4 py-12 text-center">
                     <UserRound className="mx-auto h-6 w-6 text-slate-300" />
                     <p className="mt-2 text-sm text-slate-500">
                       No users match this filter.
@@ -281,6 +317,24 @@ export default function UsersManager({ currentUserId, initialRole = "all" }) {
                         </span>
                       </td>
 
+                      <td className="px-4 py-3">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset",
+                            user.isBlocked
+                              ? "bg-rose-50 text-rose-700 ring-rose-200"
+                              : "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                          )}
+                        >
+                          {user.isBlocked ? (
+                            <Ban className="h-3 w-3" />
+                          ) : (
+                            <ShieldCheck className="h-3 w-3" />
+                          )}
+                          {user.isBlocked ? "Blocked" : "Active"}
+                        </span>
+                      </td>
+
                       <td className="px-4 py-3 text-xs text-slate-500">
                         {user.createdAt
                           ? new Date(user.createdAt).toLocaleDateString()
@@ -307,6 +361,26 @@ export default function UsersManager({ currentUserId, initialRole = "all" }) {
 
                           <button
                             type="button"
+                            onClick={() => toggleBlock(user)}
+                            disabled={isSelf || isBusy}
+                            aria-label={`${user.isBlocked ? "Unblock" : "Block"} ${user.email}`}
+                            title={user.isBlocked ? "Unblock user" : "Block user"}
+                            className={cn(
+                              "flex h-9 w-9 items-center justify-center rounded-lg border transition disabled:cursor-not-allowed disabled:opacity-40",
+                              user.isBlocked
+                                ? "border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                                : "border-slate-200 text-slate-400 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                            )}
+                          >
+                            {user.isBlocked ? (
+                              <ShieldCheck className="h-4 w-4" />
+                            ) : (
+                              <Ban className="h-4 w-4" />
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
                             onClick={() => deleteUser(user)}
                             disabled={isSelf || isBusy}
                             aria-label={`Delete ${user.email}`}
@@ -330,8 +404,8 @@ export default function UsersManager({ currentUserId, initialRole = "all" }) {
       </div>
 
       <p className="text-xs text-slate-500">
-        Showing up to 200 accounts. You cannot change your own role or delete
-        your own account.
+        Showing up to 200 accounts. You cannot change your own role, block or
+        unblock yourself, or delete your own account.
       </p>
     </div>
   );

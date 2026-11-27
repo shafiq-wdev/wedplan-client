@@ -61,6 +61,18 @@ export const auth = betterAuth({
         defaultValue: "customer",
         input: false,
       },
+      isBlocked: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: false,
+      },
+      subscriptionPlan: {
+        type: "string",
+        required: false,
+        defaultValue: "free",
+        input: false,
+      },
     },
   },
 

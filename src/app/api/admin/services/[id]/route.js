@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { adminApiGuard } from "@/lib/admin";
 import { db } from "@/lib/db";
+import { getPublishLimitError } from "@/lib/plan-limits";
 import {
   SERVICE_CATEGORIES,
   SERVICE_STATUSES,
@@ -122,6 +123,23 @@ export async function PATCH(request, { params }) {
   }
 
   updates.updatedAt = new Date();
+
+  if (updates.status === "published") {
+    const current = await db.collection("services").findOne({ _id: objectId });
+
+    if (!current) {
+      return NextResponse.json({ error: "Service not found." }, { status: 404 });
+    }
+
+    if (current.status !== "published") {
+      const limitError = await getPublishLimitError(
+        current.vendorId,
+        objectId
+      );
+
+      if (limitError) return limitError;
+    }
+  }
 
   const result = await db
     .collection("services")

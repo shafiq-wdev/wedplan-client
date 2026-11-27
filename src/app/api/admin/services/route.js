@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminApiGuard } from "@/lib/admin";
 import { db } from "@/lib/db";
+import { getPublishLimitError } from "@/lib/plan-limits";
 import {
   SERVICE_CATEGORIES,
   SERVICE_STATUSES,
@@ -50,6 +51,7 @@ export async function POST(request) {
   const status = SERVICE_STATUSES.includes(body?.status)
     ? body.status
     : "pending";
+  const vendorId = String(body?.vendorId ?? "").trim();
   const price = Number(body?.price ?? 0);
 
   if (title.length < 2) {
@@ -73,6 +75,12 @@ export async function POST(request) {
     );
   }
 
+  if (status === "published") {
+    const limitError = await getPublishLimitError(vendorId);
+
+    if (limitError) return limitError;
+  }
+
   const now = new Date();
   const document = {
     title,
@@ -83,7 +91,7 @@ export async function POST(request) {
     location,
     image: images[0] || "",
     images,
-    vendorId: String(body?.vendorId ?? "").trim(),
+    vendorId,
     price,
     status,
     createdAt: now,

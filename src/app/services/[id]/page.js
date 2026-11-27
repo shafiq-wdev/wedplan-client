@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { headers } from "next/headers";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { ObjectId } from "mongodb";
 import {
@@ -15,7 +14,7 @@ import {
 import BookingForm from "@/components/services/BookingForm";
 import ServiceCard from "@/components/services/ServiceCard";
 import ServiceGallery from "@/components/services/ServiceGallery";
-import { auth } from "@/lib/auth";
+import { requirePageAccess } from "@/lib/auth-guards";
 import { db } from "@/lib/db";
 import { getCategoryQueryValues, serializeService } from "@/lib/services";
 
@@ -44,13 +43,7 @@ function vendorInitials(name) {
 export default async function ServiceDetailsPage({ params }) {
   await connection();
 
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    redirect("/sign-in");
-  }
+  const session = await requirePageAccess();
 
   const { id } = await params;
 

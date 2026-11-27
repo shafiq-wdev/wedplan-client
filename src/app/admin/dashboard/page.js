@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  BadgeCheck,
+  Clock3,
   ReceiptText,
   Store,
   UserCog,
@@ -80,32 +80,46 @@ export default async function AdminDashboardPage() {
 
   const stats = [
     {
-      label: "Registered users",
+      label: "Total registered users",
       value: totalUsers,
-      detail: `${usersByRole.customer} customers · ${usersByRole.vendor} vendors · ${usersByRole.admin} admins`,
+      detail: "All customer, vendor, and admin accounts",
       icon: Users,
       tone: "bg-indigo-50 text-indigo-600",
     },
     {
-      label: "Published services",
-      value: servicesByStatus.published,
-      detail: `${servicesByStatus.pending} awaiting review · ${totalServices} total`,
+      label: "Total vendors",
+      value: usersByRole.vendor,
+      detail: "Accounts with the vendor role",
+      icon: UserCog,
+      tone: "bg-amber-50 text-amber-600",
+    },
+    {
+      label: "Total customers",
+      value: usersByRole.customer,
+      detail: "Accounts with the customer role",
+      icon: Users,
+      tone: "bg-emerald-50 text-emerald-600",
+    },
+    {
+      label: "Total services",
+      value: totalServices,
+      detail: `${servicesByStatus.published} published · ${servicesByStatus.rejected} rejected`,
       icon: Store,
       tone: "bg-rose-50 text-rose-600",
     },
     {
-      label: "Platform transactions",
+      label: "Pending services",
+      value: servicesByStatus.pending,
+      detail: "Submitted listings awaiting review",
+      icon: Clock3,
+      tone: "bg-amber-50 text-amber-600",
+    },
+    {
+      label: "Total transactions",
       value: transactions.count,
       detail: `$${Number(transactions.volume).toLocaleString()} total volume`,
       icon: ReceiptText,
       tone: "bg-emerald-50 text-emerald-600",
-    },
-    {
-      label: "Signed in as",
-      value: session.user.name?.split(" ")[0] || "Admin",
-      detail: session.user.email,
-      icon: BadgeCheck,
-      tone: "bg-amber-50 text-amber-600",
     },
   ];
 
@@ -145,7 +159,7 @@ export default async function AdminDashboardPage() {
       title={`Welcome, ${session.user.name?.split(" ")[0] || "Admin"}`}
       description="Manage users, review published services, and monitor platform transactions from one secure console."
     >
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
 

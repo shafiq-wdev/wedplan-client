@@ -9,8 +9,8 @@ export default async function AdminServicesPage() {
 
   return (
     <AdminShell
-      title="Published services"
-      description="Review every vendor listing, approve what goes live, and remove anything that does not meet platform standards."
+      title="Manage services"
+      description="Search and filter every submitted listing, review pending services, change statuses, and remove inappropriate services."
     >
       <ServicesManager />
     </AdminShell>

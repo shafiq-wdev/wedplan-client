@@ -118,6 +118,7 @@ export function serializeService(service) {
     vendorTagline: service.vendorTagline || "",
     vendorId: service.vendorId ? String(service.vendorId) : "",
     status: service.status || "pending",
+    isAvailable: service.isAvailable !== false,
     createdAt: service.createdAt
       ? new Date(service.createdAt).toISOString()
       : null,

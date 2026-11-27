@@ -1,8 +1,7 @@
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 
-import { auth } from "@/lib/auth";
+import { requireApiAccess } from "@/lib/auth-guards";
 import { db } from "@/lib/db";
 
 const ACTIVE_STATUSES = ["pending", "accepted"];
@@ -12,14 +11,10 @@ function jsonError(message, status) {
 }
 
 export async function POST(request) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const guard = await requireApiAccess();
+  if (guard.error) return guard.error;
 
-  if (!session) {
-    return jsonError("Please sign in to submit a booking request.", 401);
-  }
-
+  const { session } = guard;
   const role = session.user.role || "customer";
 
   if (role !== "customer") {
@@ -51,6 +46,10 @@ export async function POST(request) {
 
   if (!service) {
     return jsonError("This service is not available for booking.", 404);
+  }
+
+  if (service.isAvailable === false) {
+    return jsonError("This service is not accepting bookings right now.", 409);
   }
 
   const customerId = session.user.id;
@@ -120,6 +119,7 @@ export async function POST(request) {
   const booking = {
     serviceId: new ObjectId(serviceId),
     serviceName: String(service.title ?? ""),
+    serviceImage: String(service.image ?? ""),
     vendorId: serviceVendorId,
     vendorName: String(service.vendorName ?? ""),
     customerId,

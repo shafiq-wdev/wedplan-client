@@ -34,6 +34,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { authClient } from "@/lib/auth-client";
+import { uploadImageToImgBB } from "@/lib/image-upload";
 import { getDashboardPath } from "@/lib/roles";
 
 const initialForm = {
@@ -112,35 +113,6 @@ export default function SignUpPage() {
     setPreview("");
   };
 
-  const uploadToImgBB = async () => {
-    if (!imageFile) return "";
-
-    const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
-
-    if (!apiKey) {
-      throw new Error("ImgBB API key is missing.");
-    }
-
-    const body = new FormData();
-    body.append("image", imageFile);
-
-    const response = await fetch(
-      `https://api.imgbb.com/1/upload?key=${apiKey}`,
-      {
-        method: "POST",
-        body,
-      }
-    );
-
-    const result = await response.json();
-
-    if (!response.ok || !result.success) {
-      throw new Error("Profile image upload failed.");
-    }
-
-    return result.data.url;
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
     setFormError("");
@@ -162,7 +134,7 @@ export default function SignUpPage() {
     try {
       setLoading(true);
 
-      const imageUrl = await uploadToImgBB();
+      const imageUrl = imageFile ? await uploadImageToImgBB(imageFile) : "";
 
       const { data, error } = await authClient.signUp.email({
         name: formData.name.trim(),

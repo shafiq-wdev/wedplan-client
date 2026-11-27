@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Loader2,
   Plus,
+  Search,
   Store,
   Trash2,
   XCircle,
@@ -46,6 +47,8 @@ export default function ServicesManager() {
   const [busyId, setBusyId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     let active = true;
@@ -169,6 +172,20 @@ export default function ServicesManager() {
       setBusyId("");
     }
   };
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredServices = services.filter((service) => {
+    const matchesQuery =
+      !normalizedQuery ||
+      [service.title, service.vendorName, service.location, service.category]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedQuery);
+    const matchesStatus =
+      statusFilter === "all" || service.status === statusFilter;
+
+    return matchesQuery && matchesStatus;
+  });
 
   return (
     <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
@@ -342,6 +359,37 @@ export default function ServicesManager() {
           </div>
         )}
 
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search by title, vendor, category, or location"
+              className="h-10 rounded-xl border-slate-200 pl-9"
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+            >
+              <option value="all">All statuses</option>
+              {SERVICE_STATUSES.map((status) => (
+                <option key={status} value={status} className="capitalize">
+                  {status}
+                </option>
+              ))}
+            </select>
+
+            <span className="whitespace-nowrap text-xs text-slate-500">
+              {filteredServices.length} of {services.length}
+            </span>
+          </div>
+        </div>
+
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm">
@@ -366,17 +414,19 @@ export default function ServicesManager() {
                       </p>
                     </td>
                   </tr>
-                ) : services.length === 0 ? (
+                ) : filteredServices.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-4 py-12 text-center">
                       <Store className="mx-auto h-6 w-6 text-slate-300" />
                       <p className="mt-2 text-sm text-slate-500">
-                        No services yet. Create the first listing.
+                        {services.length === 0
+                          ? "No services yet. Create the first listing."
+                          : "No services match these filters."}
                       </p>
                     </td>
                   </tr>
                 ) : (
-                  services.map((service) => {
+                  filteredServices.map((service) => {
                     const isBusy = busyId === service.id;
 
                     return (

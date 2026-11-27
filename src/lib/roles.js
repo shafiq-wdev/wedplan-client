@@ -18,3 +18,11 @@ export function getRoleLabel(role) {
   if (role === "vendor") return "Vendor";
   return "Customer";
 }
+
+export function getSafeRedirectPath(value) {
+  if (typeof value !== "string") return null;
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  if (value.startsWith("/\\")) return null;
+  if (/[\u0000-\u001F\u007F]/.test(value)) return null;
+  return value;
+}

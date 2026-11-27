@@ -22,7 +22,7 @@ export async function PATCH(request, { params }) {
 
   if (guard.session.user.id === id) {
     return NextResponse.json(
-      { error: "You cannot change your own role." },
+      { error: "You cannot change your own role or block yourself." },
       { status: 400 }
     );
   }
@@ -35,20 +35,46 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const { role } = body ?? {};
+  const hasRole = body?.role !== undefined;
+  const hasBlocked = body?.isBlocked !== undefined;
 
-  if (!SIGNUP_ROLES.includes(role)) {
+  if (!hasRole && !hasBlocked) {
+    return NextResponse.json(
+      { error: "Provide a role or isBlocked value." },
+      { status: 400 }
+    );
+  }
+
+  if (hasRole && !SIGNUP_ROLES.includes(body.role)) {
     return NextResponse.json({ error: "Invalid role." }, { status: 400 });
   }
 
+  if (hasBlocked && typeof body.isBlocked !== "boolean") {
+    return NextResponse.json(
+      { error: "isBlocked must be a boolean." },
+      { status: 400 }
+    );
+  }
+
+  const updates = { updatedAt: new Date() };
+
+  if (hasRole) updates.role = body.role;
+  if (hasBlocked) updates.isBlocked = body.isBlocked;
+
   const result = await db.collection("user").findOneAndUpdate(
     { _id: objectId },
-    { $set: { role, updatedAt: new Date() } },
+    { $set: updates },
     { returnDocument: "after" }
   );
 
   if (!result) {
     return NextResponse.json({ error: "User not found." }, { status: 404 });
+  }
+
+  if (body.isBlocked === true) {
+    await db
+      .collection("session")
+      .deleteMany({ $or: [{ userId: objectId }, { userId: id }] });
   }
 
   return NextResponse.json({
@@ -57,6 +83,7 @@ export async function PATCH(request, { params }) {
       name: result.name || "",
       email: result.email || "",
       role: result.role || "customer",
+      isBlocked: Boolean(result.isBlocked),
     },
   });
 }

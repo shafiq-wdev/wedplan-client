@@ -1,21 +1,13 @@
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Mail, ShieldCheck } from "lucide-react";
-import { auth } from "@/lib/auth";
+import { requirePageAccess } from "@/lib/auth-guards";
 import { getDashboardPath, getRoleLabel } from "@/lib/roles";
 
 export const instant = false;
 
 export default async function ProfilePage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    redirect("/sign-in");
-  }
+  const session = await requirePageAccess();
 
   const { user } = session;
   const role = user.role || "customer";

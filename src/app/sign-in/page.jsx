@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -28,12 +28,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { authClient } from "@/lib/auth-client";
-import { getDashboardPath } from "@/lib/roles";
+import { getDashboardPath, getSafeRedirectPath } from "@/lib/roles";
 
 const initialForm = {
   email: "",
   password: "",
 };
+
+const BLOCKED_MESSAGE =
+  "This account is blocked. Please contact an administrator.";
+
+function readNextPath() {
+  if (typeof window === "undefined") return null;
+
+  const next = getSafeRedirectPath(
+    new URLSearchParams(window.location.search).get("next")
+  );
+
+  if (!next || next === "/sign-in" || next.startsWith("/api/")) {
+    return null;
+  }
+
+  return next;
+}
 
 export default function SignInPage() {
   const router = useRouter();
@@ -43,11 +60,26 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [formError, setFormError] = useState("");
+  const blockedHandledRef = useRef(false);
 
   useEffect(() => {
-    if (session?.user) {
-      router.replace(getDashboardPath(session.user.role));
+    if (!session?.user) return;
+
+    if (session.user.isBlocked) {
+      if (!blockedHandledRef.current) {
+        blockedHandledRef.current = true;
+        setFormError(BLOCKED_MESSAGE);
+        toast.error(BLOCKED_MESSAGE);
+      }
+
+      authClient.signOut().catch((signOutError) => {
+        console.error("Blocked sign-out failed:", signOutError);
+      });
+      return;
     }
+
+    blockedHandledRef.current = false;
+    router.replace(readNextPath() || getDashboardPath(session.user.role));
   }, [session, router]);
 
   const handleChange = (event) => {
@@ -74,13 +106,21 @@ export default function SignInPage() {
         throw new Error(error.message || "Invalid email or password.");
       }
 
+      if (data?.user?.isBlocked) {
+        blockedHandledRef.current = true;
+        setFormError(BLOCKED_MESSAGE);
+        toast.error(BLOCKED_MESSAGE);
+        await authClient.signOut();
+        return;
+      }
+
       const firstName = data?.user?.name?.split(" ")[0];
 
       toast.success(
         firstName ? `Welcome back, ${firstName}!` : "Welcome back!"
       );
 
-      router.push(getDashboardPath(data?.user?.role));
+      router.push(readNextPath() || getDashboardPath(data?.user?.role));
       router.refresh();
     } catch (error) {
       console.error("Signin error:", error);
@@ -100,10 +140,14 @@ export default function SignInPage() {
       setGoogleLoading(true);
       setFormError("");
 
+      const nextPath = readNextPath();
+
       const { error } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/dashboard",
-        errorCallbackURL: "/sign-in",
+        callbackURL: nextPath || "/dashboard",
+        errorCallbackURL: nextPath
+          ? `/sign-in?next=${encodeURIComponent(nextPath)}`
+          : "/sign-in",
       });
 
       if (error) {
