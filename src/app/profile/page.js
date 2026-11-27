@@ -1,14 +1,23 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Mail, ShieldCheck } from "lucide-react";
+import { connection } from "next/server";
+import {
+  ArrowRight,
+  BriefcaseBusiness,
+  Mail,
+  ShieldCheck,
+} from "lucide-react";
+
+import ProfileForm from "@/components/profile/ProfileForm";
 import { requirePageAccess } from "@/lib/auth-guards";
 import { getDashboardPath, getRoleLabel } from "@/lib/roles";
 
 export const instant = false;
 
 export default async function ProfilePage() {
-  const session = await requirePageAccess();
+  await connection();
 
+  const session = await requirePageAccess();
   const { user } = session;
   const role = user.role || "customer";
   const displayName = user.name || "WedPlan user";
@@ -83,11 +92,31 @@ export default async function ProfilePage() {
                   {getRoleLabel(role)}
                 </p>
               </div>
+
+              {role === "vendor" ? (
+                <div className="rounded-2xl border border-rose-100 bg-rose-50/40 p-4 sm:col-span-2">
+                  <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-rose-400">
+                    <BriefcaseBusiness className="h-4 w-4" />
+                    Business name
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-gray-700">
+                    {user.businessName || "Not set yet"}
+                  </p>
+                </div>
+              ) : null}
             </div>
 
-            <p className="mt-6 text-sm text-gray-500">
-              Profile editing is coming soon.
-            </p>
+            <div className="mt-8">
+              <ProfileForm
+                user={{
+                  name: user.name || "",
+                  email: user.email || "",
+                  image: user.image || "",
+                  role,
+                  businessName: user.businessName || "",
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>

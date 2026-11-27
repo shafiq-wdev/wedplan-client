@@ -67,6 +67,12 @@ export const auth = betterAuth({
         defaultValue: false,
         input: false,
       },
+      businessName: {
+        type: "string",
+        required: false,
+        defaultValue: "",
+        input: false,
+      },
       subscriptionPlan: {
         type: "string",
         required: false,
