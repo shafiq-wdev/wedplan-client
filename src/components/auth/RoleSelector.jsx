@@ -1,4 +1,9 @@
-import { BriefcaseBusiness, CheckCircle2, HeartHandshake } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  CheckCircle2,
+  HeartHandshake,
+  ShieldCheck,
+} from "lucide-react";
 import { cn } from "cn";
 
 const roles = [
@@ -13,6 +18,13 @@ const roles = [
     label: "Vendor",
     description: "I offer wedding services",
     icon: BriefcaseBusiness,
+  },
+  {
+    value: "admin",
+    label: "Admin",
+    description: "I manage the platform",
+    icon: ShieldCheck,
+    wide: true,
   },
 ];
 
@@ -31,6 +43,7 @@ export default function RoleSelector({ value, onChange }) {
             aria-pressed={selected}
             className={cn(
               "group relative flex items-start gap-3 rounded-2xl border p-4 text-left transition-all duration-300",
+              role.wide && "sm:col-span-2",
               selected
                 ? "border-rose-300 bg-rose-50 shadow-sm shadow-rose-100 ring-2 ring-rose-200"
                 : "border-gray-200 bg-white hover:-translate-y-0.5 hover:border-rose-200 hover:bg-rose-50/40 hover:shadow-sm"

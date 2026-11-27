@@ -5,11 +5,9 @@ import {
   createAuthMiddleware,
   getOAuthState,
 } from "better-auth/api";
-import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
-import { PUBLIC_ROLES } from "./roles.js";
-
-const globalForMongo = globalThis;
+import { db, mongoClient } from "./db.js";
+import { SIGNUP_ROLES } from "./roles.js";
 
 const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z]).{6,}$/;
 
@@ -17,38 +15,28 @@ const PASSWORD_MESSAGE =
   "Password must be at least 6 characters and include one uppercase and one lowercase letter.";
 
 function sanitizeRole(role) {
-  return PUBLIC_ROLES.includes(role) ? role : "customer";
+  return SIGNUP_ROLES.includes(role) ? role : "customer";
 }
 
-function getMongoConnection() {
-  const uri = process.env.BETTER_AUTH_DB_URI || process.env.MONGODB_URI;
+function assertAdminCode(code) {
+  const requiredCode = process.env.ADMIN_SIGNUP_CODE;
 
-  if (!uri) {
-    throw new Error("BETTER_AUTH_DB_URI is not set");
+  // Open in demo mode; set ADMIN_SIGNUP_CODE to lock admin sign-up down.
+  if (!requiredCode) return;
+
+  if (typeof code !== "string" || code !== requiredCode) {
+    throw new APIError("FORBIDDEN", {
+      message: "Invalid admin access code.",
+    });
   }
-
-  const client = new MongoClient(uri);
-
-  return {
-    client,
-    db: client.db(process.env.BETTER_AUTH_DB_NAME || "wedplandb"),
-  };
 }
-
-const mongo = globalForMongo.__wedplanMongo ?? getMongoConnection();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForMongo.__wedplanMongo = mongo;
-}
-
-const { client, db } = mongo;
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   secret: process.env.BETTER_AUTH_SECRET,
 
   database: mongodbAdapter(db, {
-    client,
+    client: mongoClient,
   }),
 
   emailAndPassword: {
@@ -82,10 +70,8 @@ export const auth = betterAuth({
         before: async (user, ctx) => {
           const oauthState = await getOAuthState();
           const requestedRole =
-            oauthState?.serverContext?.signupRole ??
-            ctx?.body?.role;
+            oauthState?.serverContext?.signupRole ?? ctx?.body?.role;
 
-          // Admin accounts are provisioned outside public registration.
           return {
             data: {
               ...user,
@@ -105,14 +91,22 @@ export const auth = betterAuth({
         if (typeof password === "string" && !PASSWORD_PATTERN.test(password)) {
           throw new APIError("BAD_REQUEST", { message: PASSWORD_MESSAGE });
         }
+
+        if (ctx.body?.role === "admin") {
+          assertAdminCode(ctx.body?.adminCode);
+        }
       }
 
       if (ctx.path === "/sign-in/social") {
+        const role = sanitizeRole(ctx.body?.additionalData?.role);
+
+        if (role === "admin") {
+          assertAdminCode(ctx.body?.additionalData?.adminCode);
+        }
+
         // Keep the selected role in server-trusted OAuth state so it survives
         // the provider redirect and cannot be swapped on the callback.
-        await addOAuthServerContext({
-          signupRole: sanitizeRole(ctx.body?.additionalData?.role),
-        });
+        await addOAuthServerContext({ signupRole: role });
       }
     }),
   },

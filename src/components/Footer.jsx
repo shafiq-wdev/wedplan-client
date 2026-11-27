@@ -10,19 +10,33 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 const Footer = () => {
   const quickLinks = [
     { name: "Home", href: "/" },
-    { name: "Find Vendors", href: "/vendors" },
+    { name: "Find Vendors", href: "/services" },
+    { name: "Categories", href: "/#categories" },
     { name: "How It Works", href: "/#how-it-works" },
-    { name: "My Requests", href: "/my-requests" },
   ];
 
   const services = [
-    { name: "Photography", href: "/vendors?category=photography" },
-    { name: "Catering", href: "/vendors?category=catering" },
-    { name: "Wedding Venues", href: "/vendors?category=venue" },
-    { name: "Decoration", href: "/vendors?category=decoration" },
+    {
+      name: "Photography & Videography",
+      href: "/services?category=photography-videography",
+    },
+    {
+      name: "Catering Services",
+      href: "/services?category=catering-services",
+    },
+    {
+      name: "Wedding Venues",
+      href: "/services?category=wedding-venues",
+    },
+    {
+      name: "Decoration & Florist",
+      href: "/services?category=decoration-florist",
+    },
   ];
 
   const socials = [
@@ -31,7 +45,7 @@ const Footer = () => {
     { name: "LinkedIn", href: "https://linkedin.com" },
   ];
 
-  const currentYear = new Date().getFullYear();
+  const currentYear = CURRENT_YEAR;
 
   return (
     <footer className="relative overflow-hidden bg-[#080910] text-white">
@@ -67,10 +81,10 @@ const Footer = () => {
             </div>
 
             <Link
-              href="/vendors"
+              href="/services"
               className="group inline-flex shrink-0 items-center gap-3 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 px-7 py-4 text-sm font-semibold text-white shadow-lg shadow-rose-500/20 transition duration-300 hover:-translate-y-1 hover:shadow-rose-500/40"
             >
-              Explore Vendors
+              Explore Services
               <ArrowUpRight
                 size={18}
                 className="transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1"

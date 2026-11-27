@@ -1,4 +1,7 @@
-export const PUBLIC_ROLES = ["customer", "vendor"];
+export const SIGNUP_ROLES = ["customer", "vendor", "admin"];
+
+// Backwards-compatible alias.
+export const PUBLIC_ROLES = SIGNUP_ROLES;
 
 export const DASHBOARD_BY_ROLE = {
   admin: "/admin/dashboard",

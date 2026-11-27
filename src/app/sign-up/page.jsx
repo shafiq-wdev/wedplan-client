@@ -9,6 +9,7 @@ import {
   ArrowRight,
   Camera,
   ImagePlus,
+  KeyRound,
   Loader2,
   Mail,
   ShieldCheck,
@@ -40,10 +41,12 @@ const initialForm = {
   email: "",
   password: "",
   role: "customer",
+  adminCode: "",
 };
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { data: session } = authClient.useSession();
 
   const [formData, setFormData] = useState(initialForm);
   const [imageFile, setImageFile] = useState(null);
@@ -51,6 +54,12 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [formError, setFormError] = useState("");
+
+  useEffect(() => {
+    if (session?.user) {
+      router.replace(getDashboardPath(session.user.role));
+    }
+  }, [session, router]);
 
   useEffect(() => {
     return () => {
@@ -161,6 +170,7 @@ export default function SignUpPage() {
         password: formData.password,
         image: imageUrl || undefined,
         role: formData.role,
+        adminCode: formData.adminCode.trim() || undefined,
       });
 
       if (error) {
@@ -194,7 +204,10 @@ export default function SignUpPage() {
         callbackURL: "/dashboard",
         newUserCallbackURL: "/dashboard",
         errorCallbackURL: "/sign-up",
-        additionalData: { role: formData.role },
+        additionalData: {
+          role: formData.role,
+          adminCode: formData.adminCode.trim() || undefined,
+        },
       });
 
       if (error) {
@@ -234,7 +247,7 @@ export default function SignUpPage() {
       }
       description="Join WedPlan and discover everything you need to create beautiful wedding memories."
       features={[
-        "Create a customer or vendor profile in seconds",
+        "Create a customer, vendor, or admin profile in seconds",
         "Secure email and Google authentication",
         "Save your plans and manage everything in one place",
       ]}
@@ -333,10 +346,37 @@ export default function SignUpPage() {
                 onChange={(role) => updateField("role", role)}
               />
 
+              {formData.role === "admin" && (
+                <div className="animate-fade-in space-y-2 pt-1">
+                  <Label htmlFor="adminCode">Admin access code</Label>
+
+                  <div className="relative">
+                    <KeyRound className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-300" />
+
+                    <Input
+                      id="adminCode"
+                      name="adminCode"
+                      type="password"
+                      placeholder="Enter your admin access code"
+                      value={formData.adminCode}
+                      onChange={handleChange}
+                      className="h-12 rounded-xl border-rose-100 bg-rose-50/30 pl-11 text-gray-900 placeholder:text-rose-200 focus-visible:border-rose-300 focus-visible:ring-rose-200"
+                      autoComplete="off"
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <p className="text-xs leading-relaxed text-gray-400">
+                    Only required when an admin access code is configured for
+                    this site.
+                  </p>
+                </div>
+              )}
+
               <p className="flex items-start gap-1.5 text-xs leading-relaxed text-gray-400">
                 <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-300" />
-                Admin accounts are created securely by the WedPlan team and
-                cannot be registered here.
+                Admins can manage registered users, vendors, published
+                services, and platform transactions.
               </p>
             </div>
 
