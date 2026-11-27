@@ -6,6 +6,12 @@ const statusStyles = {
   accepted: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   rejected: "bg-rose-50 text-rose-700 ring-rose-200",
   cancelled: "bg-slate-100 text-slate-600 ring-slate-200",
+  completed: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  paid: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  succeeded: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  expired: "bg-slate-100 text-slate-600 ring-slate-200",
+  refunded: "bg-slate-100 text-slate-600 ring-slate-200",
+  failed: "bg-rose-50 text-rose-700 ring-rose-200",
   available: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   unavailable: "bg-slate-100 text-slate-600 ring-slate-200",
 };

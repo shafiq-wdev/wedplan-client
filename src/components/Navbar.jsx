@@ -14,6 +14,7 @@ import {
   BriefcaseBusiness,
   ChevronDown,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -93,12 +94,18 @@ export default function Navbar({ user: userProp = null, onLogout }) {
 
       await clearBackendToken();
 
+      toast.success("Signed out successfully.");
       setOpen(false);
       setMobileMenuOpen(false);
       router.push("/");
       router.refresh();
     } catch (error) {
       console.error("Logout failed:", error);
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : "Unable to sign out. Please try again."
+      );
     }
   };
 
@@ -191,7 +198,7 @@ export default function Navbar({ user: userProp = null, onLogout }) {
 
                 <DropdownMenuItem
                   className="cursor-pointer py-2"
-                  onClick={() => router.push(getDashboardPath(user.role))}
+                  render={<Link href={getDashboardPath(user.role)} />}
                 >
                   <LayoutDashboard className="mr-2 h-4 w-4" />
                   Dashboard
@@ -199,7 +206,7 @@ export default function Navbar({ user: userProp = null, onLogout }) {
 
                 <DropdownMenuItem
                   className="cursor-pointer py-2"
-                  onClick={() => router.push("/profile")}
+                  render={<Link href="/profile" />}
                 >
                   <UserRound className="mr-2 h-4 w-4" />
                   Profile Settings

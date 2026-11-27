@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Clock3, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, Clock3, XCircle } from "lucide-react";
 
+import RefreshButton from "@/components/feedback/RefreshButton";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "cn";
 
@@ -20,6 +21,11 @@ const variants = {
     iconClass: "bg-rose-100 text-rose-600",
     badgeClass: "bg-rose-50 text-rose-700 ring-rose-200",
   },
+  error: {
+    icon: AlertTriangle,
+    iconClass: "bg-amber-100 text-amber-600",
+    badgeClass: "bg-amber-50 text-amber-700 ring-amber-200",
+  },
 };
 
 export default function PaymentResultCard({
@@ -28,6 +34,7 @@ export default function PaymentResultCard({
   description,
   statusLabel,
   sessionId,
+  showRefresh = false,
 }) {
   const style = variants[variant] || variants.pending;
   const Icon = style.icon;
@@ -67,16 +74,20 @@ export default function PaymentResultCard({
         ) : null}
       </div>
 
-      <Link
-        href="/vendor/dashboard/subscription"
-        className={cn(
-          buttonVariants(),
-          "mt-8 h-11 rounded-xl bg-slate-900 px-5 text-white hover:bg-slate-800"
-        )}
-      >
-        Back to subscription
-        <ArrowRight className="ml-2 h-4 w-4" />
-      </Link>
+      <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+        <Link
+          href="/vendor/dashboard/subscription"
+          className={cn(
+            buttonVariants(),
+            "h-11 rounded-xl bg-rose-500 px-5 text-white hover:bg-rose-600"
+          )}
+        >
+          Back to subscription
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+
+        {showRefresh ? <RefreshButton /> : null}
+      </div>
     </div>
   );
 }

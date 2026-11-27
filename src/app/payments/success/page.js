@@ -12,24 +12,36 @@ export default async function PaymentSuccessPage({ searchParams }) {
 
   const params = await searchParams;
   const sessionId =
-    typeof params?.session_id === "string" ? params.session_id : "";
-  const transaction = await getTransactionBySessionId(sessionId);
+    typeof params?.session_id === "string" ? params.session_id.trim() : "";
+  const transaction = sessionId
+    ? await getTransactionBySessionId(sessionId)
+    : null;
   const status = transaction?.status || "processing";
 
-  const copy =
-    status === "completed"
-      ? {
-          variant: "success",
-          title: "Premium is active",
-          description:
-            "Your payment was confirmed by Stripe. You can now publish unlimited active services.",
-        }
-      : {
-          variant: "pending",
-          title: "Payment confirmation in progress",
-          description:
-            "Stripe is confirming your payment. Premium access activates only after the verified webhook arrives, so please refresh this page shortly.",
-        };
+  let copy;
+
+  if (!sessionId) {
+    copy = {
+      variant: "error",
+      title: "Payment reference missing",
+      description:
+        "This link does not include a Stripe checkout reference, so we cannot confirm a payment. Return to your subscription page to start a new checkout.",
+    };
+  } else if (status === "completed") {
+    copy = {
+      variant: "success",
+      title: "Premium is active",
+      description:
+        "Your payment was confirmed by Stripe. You can now publish unlimited active services.",
+    };
+  } else {
+    copy = {
+      variant: "pending",
+      title: "Payment confirmation in progress",
+      description:
+        "Stripe is confirming your payment. Premium access activates only after the verified webhook arrives. Refresh this page in a moment to check the latest status.",
+    };
+  }
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
@@ -37,8 +49,9 @@ export default async function PaymentSuccessPage({ searchParams }) {
         variant={copy.variant}
         title={copy.title}
         description={copy.description}
-        statusLabel={status}
+        statusLabel={sessionId ? status : "missing reference"}
         sessionId={sessionId}
+        showRefresh={Boolean(sessionId) && status !== "completed"}
       />
     </main>
   );

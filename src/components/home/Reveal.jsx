@@ -1,10 +1,16 @@
 "use client";
 
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 
 const EASE = [0.22, 1, 0.36, 1];
 
 export default function Reveal({ children, className = "", delay = 0 }) {
+  const reduceMotion = useReducedMotion();
+
+  if (reduceMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
   return (
     <motion.div
       className={className}

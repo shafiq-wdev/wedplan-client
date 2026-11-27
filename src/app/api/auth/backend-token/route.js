@@ -12,7 +12,9 @@ function getJwtSecret() {
   const secret = process.env.JWT_SECRET;
 
   if (!secret) {
-    throw new Error("JWT_SECRET is not configured on the client.");
+    const error = new Error("JWT_SECRET is not configured on the client.");
+    error.code = "JWT_NOT_CONFIGURED";
+    throw error;
   }
 
   return secret;
@@ -32,6 +34,17 @@ export async function POST() {
     );
   }
 
+  let secret;
+
+  try {
+    secret = getJwtSecret();
+  } catch {
+    return NextResponse.json(
+      { error: "Secure backend auth is not configured. Please contact support." },
+      { status: 503 }
+    );
+  }
+
   const expiresIn = process.env.JWT_EXPIRES_IN || "15m";
   const token = jwt.sign(
     {
@@ -41,7 +54,7 @@ export async function POST() {
       businessName: session.user.businessName || "",
       subscriptionPlan: session.user.subscriptionPlan || "free",
     },
-    getJwtSecret(),
+    secret,
     {
       algorithm: "HS256",
       subject: String(session.user.id),

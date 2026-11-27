@@ -47,6 +47,7 @@ export async function PATCH(request, { params }) {
     }
 
     updates.title = title;
+    updates.serviceName = title;
   }
 
   if (typeof body?.description === "string") {

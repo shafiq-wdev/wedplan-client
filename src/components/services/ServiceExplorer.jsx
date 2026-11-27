@@ -6,14 +6,36 @@ import {
   ChevronDown,
   LoaderCircle,
   MapPin,
+  RefreshCw,
   Search,
   SlidersHorizontal,
   Store,
+  Wallet,
   X,
 } from "lucide-react";
 
 import CategoryIcon from "@/components/services/CategoryIcon";
 import ServiceCard from "@/components/services/ServiceCard";
+
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest first" },
+  { value: "price_asc", label: "Price: low to high" },
+  { value: "price_desc", label: "Price: high to low" },
+];
+
+function buildParams({ query, category, location, minPrice, maxPrice, sort }) {
+  const params = new URLSearchParams();
+  const trimmedQuery = query.trim();
+
+  if (trimmedQuery) params.set("q", trimmedQuery);
+  if (category) params.set("category", category);
+  if (location) params.set("location", location);
+  if (minPrice) params.set("minPrice", minPrice);
+  if (maxPrice) params.set("maxPrice", maxPrice);
+  if (sort && sort !== "newest") params.set("sort", sort);
+
+  return params;
+}
 
 export default function ServiceExplorer({
   services,
@@ -22,31 +44,67 @@ export default function ServiceExplorer({
   initialQuery = "",
   initialCategory = "",
   initialLocation = "",
+  initialMinPrice = "",
+  initialMaxPrice = "",
+  initialSort = "newest",
+  loadError = "",
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const isFirstRender = useRef(true);
+  const lastPushed = useRef("");
   const [isPending, startTransition] = useTransition();
 
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState(initialCategory);
   const [location, setLocation] = useState(initialLocation);
+  const [minPrice, setMinPrice] = useState(String(initialMinPrice));
+  const [maxPrice, setMaxPrice] = useState(String(initialMaxPrice));
+  const [sort, setSort] = useState(initialSort);
 
+  // Keep controls in sync when filters arrive from another page (for example a
+  // category link on the home page) without clobbering values the user is typing.
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    const incoming = buildParams({
+      query: initialQuery,
+      category: initialCategory,
+      location: initialLocation,
+      minPrice: String(initialMinPrice),
+      maxPrice: String(initialMaxPrice),
+      sort: initialSort,
+    }).toString();
+
+    if (incoming === lastPushed.current) {
+      lastPushed.current = "";
       return;
     }
 
+    setQuery(initialQuery);
+    setCategory(initialCategory);
+    setLocation(initialLocation);
+    setMinPrice(String(initialMinPrice));
+    setMaxPrice(String(initialMaxPrice));
+    setSort(initialSort);
+  }, [
+    initialQuery,
+    initialCategory,
+    initialLocation,
+    initialMinPrice,
+    initialMaxPrice,
+    initialSort,
+  ]);
+
+  useEffect(() => {
     const timeout = window.setTimeout(() => {
-      const params = new URLSearchParams();
-      const trimmedQuery = query.trim();
+      const queryString = buildParams({
+        query,
+        category,
+        location,
+        minPrice,
+        maxPrice,
+        sort,
+      }).toString();
 
-      if (trimmedQuery) params.set("q", trimmedQuery);
-      if (category) params.set("category", category);
-      if (location) params.set("location", location);
-
-      const queryString = params.toString();
+      lastPushed.current = queryString;
 
       startTransition(() => {
         router.replace(
@@ -57,47 +115,108 @@ export default function ServiceExplorer({
     }, 250);
 
     return () => window.clearTimeout(timeout);
-  }, [query, category, location, pathname, router, startTransition]);
+  }, [query, category, location, minPrice, maxPrice, sort, pathname, router]);
 
   const normalizedQuery = query.trim().toLowerCase();
-  const hasFilters = Boolean(normalizedQuery || category || location);
+  const floor = minPrice === "" ? null : Number(minPrice);
+  const ceiling = maxPrice === "" ? null : Number(maxPrice);
+  const hasFilters = Boolean(
+    normalizedQuery || category || location || minPrice || maxPrice ||
+      sort !== "newest"
+  );
 
   const visibleServices = useMemo(() => {
-    return services.filter((service) => {
-      const matchesName =
-        !normalizedQuery ||
-        service.title.toLowerCase().includes(normalizedQuery);
-      const matchesCategory =
-        !category || service.categorySlug === category;
-      const matchesLocation = !location || service.location === location;
+    const terms = normalizedQuery.split(/\s+/).filter(Boolean);
+    const filtered = services.filter((service) => {
+      const haystack = [
+        service.title,
+        service.serviceName,
+        service.description,
+        service.location,
+        service.vendorName,
+        service.vendorTagline,
+        service.category,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
-      return matchesName && matchesCategory && matchesLocation;
+      const matchesQuery = terms.every((term) => haystack.includes(term));
+      const matchesCategory = !category || service.categorySlug === category;
+      const matchesLocation = !location || service.location === location;
+      const matchesMin = floor === null || Number(service.price) >= floor;
+      const matchesMax = ceiling === null || Number(service.price) <= ceiling;
+
+      return (
+        matchesQuery &&
+        matchesCategory &&
+        matchesLocation &&
+        matchesMin &&
+        matchesMax
+      );
     });
-  }, [services, normalizedQuery, category, location]);
+
+    if (sort === "price_asc") {
+      filtered.sort((a, b) => Number(a.price) - Number(b.price));
+    } else if (sort === "price_desc") {
+      filtered.sort((a, b) => Number(b.price) - Number(a.price));
+    }
+
+    return filtered;
+  }, [
+    services,
+    normalizedQuery,
+    category,
+    location,
+    floor,
+    ceiling,
+    sort,
+  ]);
 
   const activeCategory = categories.find((item) => item.slug === category);
   const heading = activeCategory?.label || "All wedding services";
-  const description = activeCategory?.blurb ||
+  const description =
+    activeCategory?.blurb ||
     "Browse every published WedPlan service in one place.";
 
   function clearFilters() {
     setQuery("");
     setCategory("");
     setLocation("");
+    setMinPrice("");
+    setMaxPrice("");
+    setSort("newest");
   }
 
   return (
     <section className="space-y-5">
+      {loadError ? (
+        <div
+          role="alert"
+          className="flex flex-col gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <span>{loadError}</span>
+          <button
+            type="button"
+            onClick={() => router.refresh()}
+            className="inline-flex items-center gap-1.5 self-start font-semibold underline underline-offset-2"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Retry
+          </button>
+        </div>
+      ) : null}
+
       <div className="rounded-3xl border border-rose-100 bg-white p-4 shadow-sm shadow-rose-100/40 sm:p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <label className="relative flex-1">
-            <span className="sr-only">Search services by name</span>
+            <span className="sr-only">Search wedding services</span>
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-400" />
             <input
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search services by name..."
+              placeholder="Search by service, vendor, or location..."
               className="w-full rounded-2xl border border-rose-100 bg-rose-50/40 py-3 pl-11 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100"
             />
           </label>
@@ -119,12 +238,64 @@ export default function ServiceExplorer({
             </select>
             <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-400" />
           </label>
+        </div>
+
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="flex flex-1 flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-rose-500">
+              <Wallet className="h-4 w-4" />
+              Price
+            </span>
+            <label className="sr-only" htmlFor="minPrice">
+              Minimum price
+            </label>
+            <input
+              id="minPrice"
+              type="number"
+              min="0"
+              inputMode="numeric"
+              value={minPrice}
+              onChange={(event) => setMinPrice(event.target.value)}
+              placeholder="Min"
+              className="h-10 w-24 rounded-xl border border-rose-100 bg-rose-50/40 px-3 text-sm text-slate-700 outline-none transition focus:border-rose-300 focus:bg-white focus:ring-2 focus:ring-rose-100"
+            />
+            <span className="text-slate-300">—</span>
+            <label className="sr-only" htmlFor="maxPrice">
+              Maximum price
+            </label>
+            <input
+              id="maxPrice"
+              type="number"
+              min="0"
+              inputMode="numeric"
+              value={maxPrice}
+              onChange={(event) => setMaxPrice(event.target.value)}
+              placeholder="Max"
+              className="h-10 w-24 rounded-xl border border-rose-100 bg-rose-50/40 px-3 text-sm text-slate-700 outline-none transition focus:border-rose-300 focus:bg-white focus:ring-2 focus:ring-rose-100"
+            />
+          </div>
+
+          <label className="relative min-w-[190px]">
+            <span className="sr-only">Sort services</span>
+            <select
+              value={sort}
+              onChange={(event) => setSort(event.target.value)}
+              className="h-10 w-full appearance-none rounded-xl border border-rose-100 bg-rose-50/40 px-3 pr-9 text-sm font-medium text-slate-700 outline-none transition focus:border-rose-300 focus:bg-white focus:ring-2 focus:ring-rose-100"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-400" />
+          </label>
 
           {hasFilters && (
             <button
               type="button"
               onClick={clearFilters}
-              className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm font-semibold text-rose-600 transition hover:border-rose-200 hover:bg-rose-50"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-100 bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:border-rose-200 hover:bg-rose-50"
             >
               <X className="h-4 w-4" />
               Clear
@@ -221,18 +392,18 @@ export default function ServiceExplorer({
           </div>
 
           <h3 className="mt-4 text-lg font-semibold text-slate-900">
-            {services.length === 0
+            {services.length === 0 && !hasFilters
               ? "No published services yet"
               : "No services match your filters"}
           </h3>
 
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
-            {services.length === 0
+            {services.length === 0 && !hasFilters
               ? "Vendor listings appear here as soon as an admin publishes them."
-              : "Try another service name, category, or location to find your perfect match."}
+              : "Try another service name, price range, category, or location to find your perfect match."}
           </p>
 
-          {services.length > 0 && (
+          {hasFilters && (
             <button
               type="button"
               onClick={clearFilters}

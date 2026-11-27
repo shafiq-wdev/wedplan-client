@@ -5,13 +5,27 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import ServiceExplorer from "@/components/services/ServiceExplorer";
 import { db } from "@/lib/db";
 import {
-  SERVICE_CATEGORY_META,
   getCategoryBySlug,
+  getCategoryQueryValues,
   normalizeCategory,
   serializeService,
+  SERVICE_CATEGORY_META,
 } from "@/lib/services";
 
 export const instant = false;
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function readPrice(value) {
+  if (typeof value !== "string" || !/^\d+(?:\.\d+)?$/.test(value.trim())) {
+    return null;
+  }
+
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
 
 export default async function ServicesPage({ searchParams }) {
   await connection();
@@ -24,20 +38,62 @@ export default async function ServicesPage({ searchParams }) {
     typeof params.q === "string" ? params.q.slice(0, 100) : "";
   const requestedLocation =
     typeof params.location === "string" ? params.location : "";
+  const minPrice = readPrice(params.minPrice);
+  const maxPrice = readPrice(params.maxPrice);
+  const sort =
+    params.sort === "price_asc" || params.sort === "price_desc"
+      ? params.sort
+      : "newest";
+
+  const filter = { status: "published" };
+
+  if (activeCategory) {
+    filter.category = { $in: getCategoryQueryValues(activeCategory.label) };
+  }
+
+  if (requestedLocation) {
+    filter.location = requestedLocation;
+  }
+
+  const priceFilter = {};
+  if (minPrice !== null) priceFilter.$gte = minPrice;
+  if (maxPrice !== null) priceFilter.$lte = maxPrice;
+  if (Object.keys(priceFilter).length > 0) filter.price = priceFilter;
+
+  if (initialQuery) {
+    const regex = new RegExp(escapeRegex(initialQuery), "i");
+    filter.$or = [
+      { title: regex },
+      { description: regex },
+      { location: regex },
+      { vendorName: regex },
+      { vendorTagline: regex },
+      { category: regex },
+    ];
+  }
+
+  const sortOptions = {
+    newest: { createdAt: -1 },
+    price_asc: { price: 1, createdAt: -1 },
+    price_desc: { price: -1, createdAt: -1 },
+  };
 
   let allServices = [];
+  let loadError = "";
 
   try {
-    const services = await db
+    const matching = await db
       .collection("services")
-      .find({ status: "published" })
-      .sort({ createdAt: -1 })
+      .find(filter)
+      .sort(sortOptions[sort])
       .limit(200)
       .toArray();
 
-    allServices = services.map(serializeService);
+    allServices = matching.map(serializeService);
   } catch (error) {
     console.error("Unable to load published services:", error);
+    loadError =
+      "We could not load services right now. Please check your connection and try again.";
   }
 
   const categoryCounts = allServices.reduce((counts, service) => {
@@ -102,11 +158,6 @@ export default async function ServicesPage({ searchParams }) {
                 Join WedPlan
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
-
-              <span className="rounded-full bg-white/15 px-4 py-2 text-sm font-medium text-rose-50 backdrop-blur-sm">
-                {allServices.length} published{" "}
-                {allServices.length === 1 ? "service" : "services"}
-              </span>
             </div>
           </div>
         </section>
@@ -118,6 +169,10 @@ export default async function ServicesPage({ searchParams }) {
           initialQuery={initialQuery}
           initialCategory={activeCategory?.slug ?? ""}
           initialLocation={initialLocation}
+          initialMinPrice={minPrice ?? ""}
+          initialMaxPrice={maxPrice ?? ""}
+          initialSort={sort}
+          loadError={loadError}
         />
       </div>
     </main>

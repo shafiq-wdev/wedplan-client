@@ -6,26 +6,25 @@ import {
   CheckCircle2,
   Loader2,
   Plus,
+  RefreshCw,
   Search,
   Store,
   Trash2,
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import ConfirmDialog from "@/components/feedback/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { friendlyError, parseApiResponse } from "@/lib/api-client";
 import {
+  normalizeImages,
   SERVICE_CATEGORIES,
   SERVICE_STATUSES,
 } from "@/lib/services";
+import StatusBadge from "@/components/dashboard/StatusBadge";
 import { cn } from "cn";
-
-const statusStyles = {
-  published: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  pending: "bg-amber-50 text-amber-700 ring-amber-200",
-  rejected: "bg-rose-50 text-rose-700 ring-rose-200",
-};
 
 const emptyForm = {
   title: "",
@@ -44,31 +43,31 @@ export default function ServicesManager() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
   const [busyId, setBusyId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   useEffect(() => {
     let active = true;
 
     async function run() {
+      setLoading(true);
+      setError("");
+
       try {
         const response = await fetch("/api/admin/services", {
           cache: "no-store",
         });
-        const data = await response.json();
+        const data = await parseApiResponse(response, "Unable to load services.");
 
         if (!active) return;
-
-        if (!response.ok) {
-          throw new Error(data.error || "Unable to load services.");
-        }
-
         setServices(data.services ?? []);
       } catch (loadError) {
-        if (active) setError(loadError.message);
+        if (active) setError(friendlyError(loadError, "Unable to load services."));
       } finally {
         if (active) setLoading(false);
       }
@@ -79,7 +78,7 @@ export default function ServicesManager() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [retryKey]);
 
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -87,6 +86,26 @@ export default function ServicesManager() {
 
   const createService = async (event) => {
     event.preventDefault();
+
+    const title = form.title.trim();
+    const price = Number(form.price);
+    const images = normalizeImages(form.images);
+
+    if (title.length < 2) {
+      toast.error("Please enter a service title of at least 2 characters.");
+      return;
+    }
+
+    if (!Number.isFinite(price) || price < 0) {
+      toast.error("Please enter a valid price.");
+      return;
+    }
+
+    if (form.images.trim() && images.length === 0) {
+      toast.error("Image URLs must start with http:// or https://.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -95,20 +114,20 @@ export default function ServicesManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          price: Number(form.price || 0),
+          title,
+          serviceName: title,
+          price,
+          image: images[0] || "",
+          images,
         }),
       });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Unable to create service.");
-      }
+      const data = await parseApiResponse(response, "Unable to create service.");
 
       setServices((current) => [data.service, ...current]);
       setForm(emptyForm);
       toast.success("Service created.");
     } catch (createError) {
-      toast.error(createError.message);
+      toast.error(friendlyError(createError, "Unable to create service."));
     } finally {
       setSubmitting(false);
     }
@@ -123,11 +142,7 @@ export default function ServicesManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Unable to update service.");
-      }
+      const data = await parseApiResponse(response, "Unable to update service.");
 
       setServices((current) =>
         current.map((item) =>
@@ -137,37 +152,27 @@ export default function ServicesManager() {
 
       toast.success(`Service marked ${status}.`);
     } catch (updateError) {
-      toast.error(updateError.message);
+      toast.error(friendlyError(updateError, "Unable to update service."));
     } finally {
       setBusyId("");
     }
   };
 
   const deleteService = async (service) => {
-    const confirmed = window.confirm(
-      `Delete "${service.title}"? This cannot be undone.`
-    );
-
-    if (!confirmed) return;
-
     setBusyId(service.id);
 
     try {
       const response = await fetch(`/api/admin/services/${service.id}`, {
         method: "DELETE",
       });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Unable to delete service.");
-      }
+      await parseApiResponse(response, "Unable to delete service.");
 
       setServices((current) =>
         current.filter((item) => item.id !== service.id)
       );
       toast.success("Service deleted.");
     } catch (deleteError) {
-      toast.error(deleteError.message);
+      toast.error(friendlyError(deleteError, "Unable to delete service."));
     } finally {
       setBusyId("");
     }
@@ -191,7 +196,7 @@ export default function ServicesManager() {
     <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
       <form
         onSubmit={createService}
-        className="h-fit space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+        className="h-fit space-y-3 rounded-2xl border border-rose-100 bg-white p-5 shadow-sm"
       >
         <div>
           <h2 className="font-semibold text-slate-900">Add a service</h2>
@@ -209,7 +214,7 @@ export default function ServicesManager() {
             placeholder="Golden hour wedding photography"
             required
             minLength={2}
-            className="h-10 rounded-xl border-slate-200"
+            className="h-10 rounded-xl border-rose-100"
           />
         </div>
 
@@ -220,7 +225,7 @@ export default function ServicesManager() {
             value={form.vendorName}
             onChange={(event) => updateField("vendorName", event.target.value)}
             placeholder="Vendor or studio name"
-            className="h-10 rounded-xl border-slate-200"
+            className="h-10 rounded-xl border-rose-100"
           />
         </div>
 
@@ -233,7 +238,7 @@ export default function ServicesManager() {
               updateField("vendorTagline", event.target.value)
             }
             placeholder="Award-winning wedding studio"
-            className="h-10 rounded-xl border-slate-200"
+            className="h-10 rounded-xl border-rose-100"
           />
         </div>
 
@@ -244,7 +249,7 @@ export default function ServicesManager() {
             value={form.location}
             onChange={(event) => updateField("location", event.target.value)}
             placeholder="City, country"
-            className="h-10 rounded-xl border-slate-200"
+            className="h-10 rounded-xl border-rose-100"
           />
         </div>
 
@@ -256,7 +261,7 @@ export default function ServicesManager() {
             onChange={(event) => updateField("images", event.target.value)}
             rows={3}
             placeholder={"https://images.example.com/one.jpg\nhttps://images.example.com/two.jpg"}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+            className="w-full rounded-xl border border-rose-100 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
           />
         </div>
 
@@ -267,7 +272,7 @@ export default function ServicesManager() {
             value={form.vendorId}
             onChange={(event) => updateField("vendorId", event.target.value)}
             placeholder="Vendor account ID that owns this service"
-            className="h-10 rounded-xl border-slate-200"
+            className="h-10 rounded-xl border-rose-100"
           />
         </div>
 
@@ -278,7 +283,7 @@ export default function ServicesManager() {
               id="serviceCategory"
               value={form.category}
               onChange={(event) => updateField("category", event.target.value)}
-              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-2 text-sm text-slate-700"
+              className="h-10 w-full rounded-xl border border-rose-100 bg-white px-2 text-sm text-slate-700"
             >
               {SERVICE_CATEGORIES.map((category) => (
                 <option key={category} value={category}>
@@ -298,7 +303,7 @@ export default function ServicesManager() {
               value={form.price}
               onChange={(event) => updateField("price", event.target.value)}
               placeholder="0"
-              className="h-10 rounded-xl border-slate-200"
+              className="h-10 rounded-xl border-rose-100"
             />
           </div>
         </div>
@@ -313,7 +318,7 @@ export default function ServicesManager() {
             }
             rows={3}
             placeholder="What is included in this service?"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+            className="w-full rounded-xl border border-rose-100 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
           />
         </div>
 
@@ -323,7 +328,7 @@ export default function ServicesManager() {
             id="serviceStatus"
             value={form.status}
             onChange={(event) => updateField("status", event.target.value)}
-            className="h-10 w-full rounded-xl border border-slate-200 bg-white px-2 text-sm capitalize text-slate-700"
+            className="h-10 w-full rounded-xl border border-rose-100 bg-white px-2 text-sm capitalize text-slate-700"
           >
             {SERVICE_STATUSES.map((status) => (
               <option key={status} value={status}>
@@ -336,7 +341,7 @@ export default function ServicesManager() {
         <Button
           type="submit"
           disabled={submitting}
-          className="h-10 w-full rounded-xl bg-slate-900 text-white hover:bg-slate-800"
+          className="h-10 w-full rounded-xl bg-rose-500 text-white hover:bg-rose-600"
         >
           {submitting ? (
             <>
@@ -354,19 +359,27 @@ export default function ServicesManager() {
 
       <div className="space-y-4">
         {error && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
-            {error}
+          <div className="flex flex-col gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 sm:flex-row sm:items-center sm:justify-between">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => setRetryKey((key) => key + 1)}
+              className="inline-flex items-center gap-1.5 self-start font-semibold underline underline-offset-2"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Retry
+            </button>
           </div>
         )}
 
-        <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-2xl border border-rose-100 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-400" />
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search by title, vendor, category, or location"
-              className="h-10 rounded-xl border-slate-200 pl-9"
+              className="h-10 rounded-xl border-rose-100 pl-9"
             />
           </div>
 
@@ -374,7 +387,7 @@ export default function ServicesManager() {
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+              className="h-10 rounded-xl border border-rose-100 bg-white px-3 text-sm text-slate-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
             >
               <option value="all">All statuses</option>
               {SERVICE_STATUSES.map((status) => (
@@ -390,10 +403,10 @@ export default function ServicesManager() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="bg-rose-50/70 text-xs uppercase tracking-wide text-rose-500">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Service</th>
                   <th className="px-4 py-3 font-semibold">Price</th>
@@ -404,11 +417,11 @@ export default function ServicesManager() {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-rose-50">
                 {loading ? (
                   <tr>
                     <td colSpan={4} className="px-4 py-12 text-center">
-                      <Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" />
+                      <Loader2 className="mx-auto h-5 w-5 animate-spin text-rose-400" />
                       <p className="mt-2 text-sm text-slate-500">
                         Loading services...
                       </p>
@@ -417,7 +430,7 @@ export default function ServicesManager() {
                 ) : filteredServices.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-4 py-12 text-center">
-                      <Store className="mx-auto h-6 w-6 text-slate-300" />
+                      <Store className="mx-auto h-6 w-6 text-rose-300" />
                       <p className="mt-2 text-sm text-slate-500">
                         {services.length === 0
                           ? "No services yet. Create the first listing."
@@ -430,10 +443,10 @@ export default function ServicesManager() {
                     const isBusy = busyId === service.id;
 
                     return (
-                      <tr key={service.id} className="hover:bg-slate-50/70">
+                      <tr key={service.id} className="hover:bg-rose-50/40">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="relative h-11 w-14 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                            <div className="relative h-11 w-14 shrink-0 overflow-hidden rounded-lg bg-rose-50">
                               {service.image ? (
                                 <Image
                                   src={service.image}
@@ -444,7 +457,7 @@ export default function ServicesManager() {
                                   className="object-cover"
                                 />
                               ) : (
-                                <span className="flex h-full w-full items-center justify-center text-slate-300">
+                                <span className="flex h-full w-full items-center justify-center text-rose-300">
                                   <Store className="h-4 w-4" />
                                 </span>
                               )}
@@ -470,15 +483,7 @@ export default function ServicesManager() {
                         </td>
 
                         <td className="px-4 py-3">
-                          <span
-                            className={cn(
-                              "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ring-1 ring-inset",
-                              statusStyles[service.status] ||
-                                statusStyles.pending
-                            )}
-                          >
-                            {service.status}
-                          </span>
+                          <StatusBadge status={service.status} />
                         </td>
 
                         <td className="px-4 py-3">
@@ -492,7 +497,11 @@ export default function ServicesManager() {
                                 disabled={isBusy}
                                 className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 px-2.5 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-40"
                               >
-                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                {isBusy ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                )}
                                 Publish
                               </button>
                             )}
@@ -502,8 +511,11 @@ export default function ServicesManager() {
                                 type="button"
                                 onClick={() => setStatus(service, "pending")}
                                 disabled={isBusy}
-                                className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-40"
+                                className="inline-flex items-center gap-1 rounded-lg border border-rose-100 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-rose-50 disabled:opacity-40"
                               >
+                                {isBusy ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : null}
                                 Unpublish
                               </button>
                             )}
@@ -517,17 +529,21 @@ export default function ServicesManager() {
                                 disabled={isBusy}
                                 className="inline-flex items-center gap-1 rounded-lg border border-amber-200 px-2.5 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-50 disabled:opacity-40"
                               >
-                                <XCircle className="h-3.5 w-3.5" />
+                                {isBusy ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <XCircle className="h-3.5 w-3.5" />
+                                )}
                                 Reject
                               </button>
                             )}
 
                             <button
                               type="button"
-                              onClick={() => deleteService(service)}
+                              onClick={() => setPendingDelete(service)}
                               disabled={isBusy}
                               aria-label={`Delete ${service.title}`}
-                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-rose-100 text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
                             >
                               {isBusy ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -551,6 +567,22 @@ export default function ServicesManager() {
           Unpublish, or Reject to control what couples can see.
         </p>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        title="Delete this service?"
+        description={
+          pendingDelete
+            ? `"${pendingDelete.title}" will be removed permanently. This cannot be undone.`
+            : "This action cannot be undone."
+        }
+        confirmLabel="Delete service"
+        busy={Boolean(pendingDelete) && busyId === pendingDelete.id}
+        onConfirm={() => deleteService(pendingDelete)}
+      />
     </div>
   );
 }

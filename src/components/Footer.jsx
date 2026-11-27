@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import BackToTop from "@/components/feedback/BackToTop";
+
 import {
   Sparkles,
   Mail,
@@ -188,7 +190,7 @@ const Footer = () => {
 
             <div className="space-y-5">
               <a
-                href="mailto:hello@wedplan.com"
+                href="mailto:shafiq.tsc@gmail.com"
                 className="group flex items-start gap-4"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-rose-400/10 bg-rose-500/10 text-rose-400 transition group-hover:bg-rose-500 group-hover:text-white">
@@ -203,7 +205,7 @@ const Footer = () => {
               </a>
 
               <a
-                href="tel:+8801700000000"
+                href="tel:+8801712222143"
                 className="group flex items-start gap-4"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-rose-400/10 bg-rose-500/10 text-rose-400 transition group-hover:bg-rose-500 group-hover:text-white">
@@ -244,12 +246,7 @@ const Footer = () => {
             for beautiful moments.
           </p>
 
-          <Link
-            href="/"
-            className="text-sm text-gray-400 transition hover:text-rose-400"
-          >
-            Back to top ↑
-          </Link>
+          <BackToTop />
         </div>
       </div>
     </footer>

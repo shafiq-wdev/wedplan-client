@@ -154,17 +154,22 @@ async function main() {
     let updated = 0;
 
     for (const service of demoServices) {
-      const existing = await services.findOne({ title: service.title });
+      const document = {
+        ...service,
+        serviceName: service.serviceName || service.title,
+        vendorId: service.vendorId || "",
+      };
+      const existing = await services.findOne({ title: document.title });
 
       if (existing) {
         await services.updateOne(
           { _id: existing._id },
-          { $set: { ...service, updatedAt: now } }
+          { $set: { ...document, updatedAt: now } }
         );
         updated += 1;
       } else {
         await services.insertOne({
-          ...service,
+          ...document,
           createdAt: now,
           updatedAt: now,
         });

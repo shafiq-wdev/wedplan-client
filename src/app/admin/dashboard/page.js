@@ -8,6 +8,7 @@ import {
   Users,
 } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
+import StatCard from "@/components/dashboard/StatCard";
 import { requireAdminPage } from "@/lib/admin";
 import { db } from "@/lib/db";
 
@@ -84,7 +85,7 @@ export default async function AdminDashboardPage() {
       value: totalUsers,
       detail: "All customer, vendor, and admin accounts",
       icon: Users,
-      tone: "bg-indigo-50 text-indigo-600",
+      tone: "bg-rose-50 text-rose-600",
     },
     {
       label: "Total vendors",
@@ -160,34 +161,16 @@ export default async function AdminDashboardPage() {
       description="Manage users, review published services, and monitor platform transactions from one secure console."
     >
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-
-          return (
-            <article
-              key={stat.label}
-              className="animate-fade-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-              style={{ animationDelay: `${index * 60}ms` }}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  {stat.label}
-                </span>
-                <span className={`rounded-xl p-2 ${stat.tone}`}>
-                  <Icon className="h-4 w-4" />
-                </span>
-              </div>
-
-              <p className="mt-3 truncate text-3xl font-bold text-slate-900">
-                {stat.value}
-              </p>
-
-              <p className="mt-1 truncate text-xs text-slate-500">
-                {stat.detail}
-              </p>
-            </article>
-          );
-        })}
+        {stats.map((stat) => (
+          <StatCard
+            key={stat.label}
+            label={stat.label}
+            value={stat.value}
+            detail={stat.detail}
+            icon={stat.icon}
+            tone={stat.tone}
+          />
+        ))}
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
@@ -198,15 +181,15 @@ export default async function AdminDashboardPage() {
             <Link
               key={capability.title}
               href={capability.href}
-              className="group animate-fade-up rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md"
+              className="group animate-fade-up rounded-2xl border border-rose-100 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-rose-200 hover:shadow-md"
               style={{ animationDelay: `${index * 60}ms` }}
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
                   <Icon className="h-5 w-5" />
                 </div>
 
-                <ArrowRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-indigo-500" />
+                <ArrowRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-rose-500" />
               </div>
 
               <h2 className="mt-4 font-semibold text-slate-900">

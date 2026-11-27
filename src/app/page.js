@@ -89,6 +89,7 @@ export default async function Home() {
   await connection();
 
   let publishedServices = [];
+  let servicesError = "";
 
   try {
     const services = await db
@@ -101,6 +102,8 @@ export default async function Home() {
     publishedServices = services.map(serializeService);
   } catch (error) {
     console.error("Unable to load home page services:", error);
+    servicesError =
+      "Featured services are temporarily unavailable. Please try again shortly.";
   }
 
   const featuredServices = publishedServices.slice(0, 6);
@@ -247,6 +250,15 @@ export default async function Home() {
               </Link>
             </div>
           </Reveal>
+
+          {servicesError ? (
+            <div
+              role="alert"
+              className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+            >
+              {servicesError}
+            </div>
+          ) : null}
 
           {featuredServices.length > 0 ? (
             <Reveal className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" delay={0.1}>

@@ -106,7 +106,8 @@ export function serializeService(service) {
 
   return {
     id: service._id.toString(),
-    title: service.title || "",
+    title: service.title || service.serviceName || "",
+    serviceName: service.serviceName || service.title || "",
     description: service.description || "",
     category,
     categorySlug: getCategoryMeta(category)?.slug ?? "",

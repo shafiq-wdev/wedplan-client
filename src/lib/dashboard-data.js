@@ -56,6 +56,7 @@ export function serializeBooking(booking, serviceImageMap = new Map()) {
     serviceImage: booking?.serviceImage || serviceImage,
     vendorId: booking?.vendorId ? String(booking.vendorId) : "",
     vendorName: booking?.vendorName || "",
+    customerId: booking?.customerId ? String(booking.customerId) : "",
     customerName: booking?.customerName || "",
     customerEmail: booking?.customerEmail || "",
     eventDate: booking?.eventDate || "",

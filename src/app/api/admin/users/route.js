@@ -23,7 +23,7 @@ export async function GET(request) {
 
   if (query) {
     const regex = new RegExp(escapeRegex(query), "i");
-    filter.$or = [{ name: regex }, { email: regex }];
+    filter.$or = [{ name: regex }, { email: regex }, { businessName: regex }];
   }
 
   const users = await db
@@ -36,6 +36,9 @@ export async function GET(request) {
         isBlocked: 1,
         image: 1,
         emailVerified: 1,
+        businessName: 1,
+        subscriptionPlan: 1,
+        subscriptionExpiresAt: 1,
         createdAt: 1,
       },
     })
@@ -52,6 +55,11 @@ export async function GET(request) {
       isBlocked: Boolean(user.isBlocked),
       image: user.image || "",
       emailVerified: Boolean(user.emailVerified),
+      businessName: user.businessName || "",
+      subscriptionPlan: user.subscriptionPlan || "free",
+      subscriptionExpiresAt: user.subscriptionExpiresAt
+        ? new Date(user.subscriptionExpiresAt).toISOString()
+        : null,
       createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : null,
     })),
   });

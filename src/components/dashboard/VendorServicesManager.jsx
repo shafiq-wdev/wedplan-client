@@ -14,12 +14,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import ConfirmDialog from "@/components/feedback/ConfirmDialog";
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { backendApi } from "@/lib/backend-auth";
-import { uploadImageToImgBB } from "@/lib/image-upload";
+import { uploadImageToImgBB, validateImageFile } from "@/lib/image-upload";
 import { SERVICE_CATEGORIES } from "@/lib/services";
 import { cn } from "cn";
 
@@ -54,6 +55,7 @@ export default function VendorServicesManager({
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState("");
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -82,9 +84,17 @@ export default function VendorServicesManager({
 
   const handleImageChange = (event) => {
     const file = event.target.files?.[0] ?? null;
-
-    setImageFile(file);
     event.target.value = "";
+
+    if (!file) return;
+
+    try {
+      validateImageFile(file);
+      setImageFile(file);
+    } catch (error) {
+      setImageFile(null);
+      toast.error(error.message);
+    }
   };
 
   const submitService = async (event) => {
@@ -106,6 +116,7 @@ export default function VendorServicesManager({
 
       const payload = {
         title: form.title.trim(),
+        serviceName: form.title.trim(),
         category: form.category,
         description: form.description.trim(),
         price: Number(form.price),
@@ -168,12 +179,6 @@ export default function VendorServicesManager({
   };
 
   const deleteService = async (service) => {
-    const confirmed = window.confirm(
-      `Delete "${service.title}"? This cannot be undone.`
-    );
-
-    if (!confirmed) return;
-
     setBusyId(service.id);
 
     try {
@@ -459,7 +464,9 @@ export default function VendorServicesManager({
                         disabled={busy}
                         className="rounded-lg"
                       >
-                        {service.isAvailable ? (
+                        {busy ? (
+                            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                          ) : service.isAvailable ? (
                           <Ban className="mr-1 h-4 w-4" />
                         ) : (
                           <CheckCircle2 className="mr-1 h-4 w-4" />
@@ -471,7 +478,7 @@ export default function VendorServicesManager({
                         type="button"
                         variant="destructive"
                         size="sm"
-                        onClick={() => deleteService(service)}
+                        onClick={() => setPendingDelete(service)}
                         disabled={busy}
                         className="rounded-lg"
                       >
@@ -490,6 +497,22 @@ export default function VendorServicesManager({
           })
         )}
       </div>
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        title="Delete this service?"
+        description={
+          pendingDelete
+            ? `"${pendingDelete.title}" will be removed permanently. This cannot be undone.`
+            : "This action cannot be undone."
+        }
+        confirmLabel="Delete service"
+        busy={Boolean(pendingDelete) && busyId === pendingDelete.id}
+        onConfirm={() => deleteService(pendingDelete)}
+      />
     </div>
   );
 }

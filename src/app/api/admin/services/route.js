@@ -84,6 +84,7 @@ export async function POST(request) {
   const now = new Date();
   const document = {
     title,
+    serviceName: String(body?.serviceName ?? "").trim() || title,
     description,
     category,
     vendorName,

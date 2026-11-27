@@ -1,22 +1,11 @@
 import { ReceiptText } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
+import StatusBadge from "@/components/dashboard/StatusBadge";
 import { requireAdminPage } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { isStripeWebhookConfigured, serializeTransaction } from "@/lib/payments";
 
 export const instant = false;
-
-const statusStyles = {
-  completed: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  paid: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  succeeded: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  pending: "bg-amber-50 text-amber-700 ring-amber-200",
-  expired: "bg-slate-100 text-slate-600 ring-slate-200",
-  cancelled: "bg-slate-100 text-slate-600 ring-slate-200",
-  canceled: "bg-slate-100 text-slate-600 ring-slate-200",
-  refunded: "bg-slate-100 text-slate-600 ring-slate-200",
-  failed: "bg-rose-50 text-rose-700 ring-rose-200",
-};
 
 function isSuccessful(status) {
   return ["completed", "paid", "succeeded"].includes(status);
@@ -25,12 +14,20 @@ function isSuccessful(status) {
 export default async function AdminTransactionsPage() {
   await requireAdminPage();
 
-  const rawTransactions = await db
-    .collection("transactions")
-    .find({})
-    .sort({ createdAt: -1 })
-    .limit(200)
-    .toArray();
+  let rawTransactions = [];
+  let loadError = "";
+
+  try {
+    rawTransactions = await db
+      .collection("transactions")
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .toArray();
+  } catch (error) {
+    console.error("Unable to load transactions:", error);
+    loadError = "Transactions are temporarily unavailable. Please try again shortly.";
+  }
 
   const transactions = rawTransactions.map(serializeTransaction);
   const totalVolume = transactions
@@ -43,8 +40,17 @@ export default async function AdminTransactionsPage() {
       title="Platform transactions"
       description="Monitor read-only payment records. Payment status is only updated by verified Stripe webhooks, never by the success redirect or manual admin edits."
     >
+      {loadError ? (
+        <div
+          role="alert"
+          className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+        >
+          {loadError}
+        </div>
+      ) : null}
+
       <section className="grid gap-4 sm:grid-cols-3">
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <article className="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Transactions
           </p>
@@ -53,7 +59,7 @@ export default async function AdminTransactionsPage() {
           </p>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <article className="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Confirmed volume
           </p>
@@ -62,7 +68,7 @@ export default async function AdminTransactionsPage() {
           </p>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <article className="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Payment provider
           </p>
@@ -77,10 +83,10 @@ export default async function AdminTransactionsPage() {
         </article>
       </section>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1050px] text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <thead className="bg-rose-50/70 text-xs uppercase tracking-wide text-rose-500">
               <tr>
                 <th className="px-4 py-3 font-semibold">Customer</th>
                 <th className="px-4 py-3 font-semibold">Vendor</th>
@@ -97,7 +103,7 @@ export default async function AdminTransactionsPage() {
               {transactions.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-4 py-14 text-center">
-                    <ReceiptText className="mx-auto h-6 w-6 text-slate-300" />
+                    <ReceiptText className="mx-auto h-6 w-6 text-rose-300" />
                     <p className="mt-2 text-sm font-medium text-slate-600">
                       No transactions recorded yet.
                     </p>
@@ -138,14 +144,7 @@ export default async function AdminTransactionsPage() {
                     </td>
 
                     <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ring-1 ring-inset ${
-                          statusStyles[transaction.status] ||
-                          statusStyles.pending
-                        }`}
-                      >
-                        {transaction.status || "pending"}
-                      </span>
+                      <StatusBadge status={transaction.status || "pending"} />
                       {transaction.providerStatus ? (
                         <p className="mt-1 text-[11px] text-slate-400">
                           Stripe: {transaction.providerStatus}
