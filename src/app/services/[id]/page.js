@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
@@ -8,20 +7,17 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
+  LockKeyhole,
   MapPin,
-  Sparkles,
   Tag,
 } from "lucide-react";
 
-import BookingRequestButton from "@/components/services/BookingRequestButton";
-import CategoryIcon from "@/components/services/CategoryIcon";
+import BookingForm from "@/components/services/BookingForm";
 import ServiceCard from "@/components/services/ServiceCard";
+import ServiceGallery from "@/components/services/ServiceGallery";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import {
-  getCategoryQueryValues,
-  serializeService,
-} from "@/lib/services";
+import { getCategoryQueryValues, serializeService } from "@/lib/services";
 
 export const instant = false;
 
@@ -71,6 +67,13 @@ export default async function ServiceDetailsPage({ params }) {
   }
 
   const service = serializeService(document);
+  const role = session.user.role || "customer";
+  const userName = String(session.user.name ?? "").trim().toLowerCase();
+  const vendorName = String(service.vendorName ?? "").trim().toLowerCase();
+  const isOwnService =
+    role === "vendor" &&
+    ((service.vendorId && service.vendorId === session.user.id) ||
+      (vendorName && vendorName === userName));
 
   let relatedServices = [];
 
@@ -104,38 +107,16 @@ export default async function ServiceDetailsPage({ params }) {
 
         <section className="animate-fade-up overflow-hidden rounded-[2rem] border border-rose-100 bg-white shadow-xl shadow-rose-100/50">
           <div className="grid lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="relative min-h-[320px] overflow-hidden bg-gradient-to-br from-rose-200 via-pink-200 to-amber-100 lg:min-h-[520px]">
-              {service.image ? (
-                <Image
-                  src={service.image}
-                  alt={service.title}
-                  fill
-                  preload
-                  unoptimized
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-rose-400">
-                  <Sparkles className="h-14 w-14" />
-                </div>
-              )}
-
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent lg:hidden" />
-
-              <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-semibold text-rose-600 shadow-sm backdrop-blur">
-                <CategoryIcon
-                  category={service.category}
-                  className="h-3.5 w-3.5"
-                />
-                {service.category}
-              </span>
-            </div>
+            <ServiceGallery
+              images={service.images}
+              title={service.title}
+              category={service.category}
+            />
 
             <div className="flex flex-col p-6 sm:p-8 lg:p-10">
               <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-rose-500">
                 <BadgeCheck className="h-4 w-4" />
-                Verified WedPlan listing
+                Approved & active listing
               </div>
 
               <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl">
@@ -195,16 +176,43 @@ export default async function ServiceDetailsPage({ params }) {
                 </div>
               )}
 
-              <div className="mt-auto flex flex-col gap-3 pt-7 sm:flex-row">
-                <BookingRequestButton serviceTitle={service.title} />
-
-                <Link
-                  href={`/services?category=${service.categorySlug}`}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-rose-200 bg-white px-6 py-3 text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
-                >
-                  More in this category
-                </Link>
+              <div className="mt-7">
+                {role === "customer" ? (
+                  <BookingForm
+                    serviceId={service.id}
+                    serviceTitle={service.title}
+                    vendorName={service.vendorName}
+                  />
+                ) : (
+                  <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-6">
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-rose-500 shadow-sm">
+                        <LockKeyhole className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <h3 className="font-semibold text-slate-900">
+                          Booking is for customer accounts
+                        </h3>
+                        <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                          {isOwnService
+                            ? "This is your own service. Vendors cannot book their own listings."
+                            : role === "admin"
+                              ? "Admins cannot submit customer booking requests."
+                              : "Sign in with a customer account to send a booking request."}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
+
+              <Link
+                href={`/services?category=${service.categorySlug}`}
+                className="group mt-4 inline-flex w-fit items-center gap-2 text-sm font-semibold text-rose-600 transition hover:text-rose-700"
+              >
+                More in this category
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
             </div>
           </div>
         </section>

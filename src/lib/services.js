@@ -83,8 +83,26 @@ export function getCategoryQueryValues(category) {
   return [label, ...legacyValues];
 }
 
+export function normalizeImages(value) {
+  const entries = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? value.split(/[\n,]+/)
+      : [];
+
+  return entries
+    .map((entry) => String(entry).trim())
+    .filter((entry) => /^https?:\/\//i.test(entry))
+    .slice(0, 8);
+}
+
 export function serializeService(service) {
   const category = normalizeCategory(service.category);
+  const images = normalizeImages(
+    Array.isArray(service.images) && service.images.length > 0
+      ? service.images
+      : service.image
+  );
 
   return {
     id: service._id.toString(),
@@ -93,10 +111,12 @@ export function serializeService(service) {
     category,
     categorySlug: getCategoryMeta(category)?.slug ?? "",
     price: Number(service.price) || 0,
-    image: service.image || "",
+    image: images[0] || "",
+    images,
     location: service.location || "",
     vendorName: service.vendorName || "",
     vendorTagline: service.vendorTagline || "",
+    vendorId: service.vendorId ? String(service.vendorId) : "",
     status: service.status || "pending",
     createdAt: service.createdAt
       ? new Date(service.createdAt).toISOString()

@@ -5,6 +5,7 @@ import {
   SERVICE_CATEGORIES,
   SERVICE_STATUSES,
   normalizeCategory,
+  normalizeImages,
   serializeService,
 } from "@/lib/services";
 
@@ -42,7 +43,10 @@ export async function POST(request) {
   const vendorName = String(body?.vendorName ?? "").trim();
   const vendorTagline = String(body?.vendorTagline ?? "").trim();
   const location = String(body?.location ?? "").trim();
-  const image = String(body?.image ?? "").trim();
+  const images = normalizeImages([
+    ...(Array.isArray(body?.images) ? body.images : []),
+    body?.image,
+  ]);
   const status = SERVICE_STATUSES.includes(body?.status)
     ? body.status
     : "pending";
@@ -62,7 +66,7 @@ export async function POST(request) {
     );
   }
 
-  if (image && !/^https?:\/\//i.test(image)) {
+  if (body?.image && images.length === 0) {
     return NextResponse.json(
       { error: "Image must be a valid http(s) URL." },
       { status: 400 }
@@ -77,7 +81,9 @@ export async function POST(request) {
     vendorName,
     vendorTagline,
     location,
-    image,
+    image: images[0] || "",
+    images,
+    vendorId: String(body?.vendorId ?? "").trim(),
     price,
     status,
     createdAt: now,

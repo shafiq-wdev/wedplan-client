@@ -31,7 +31,8 @@ const emptyForm = {
   vendorName: "",
   vendorTagline: "",
   location: "",
-  image: "",
+  images: "",
+  vendorId: "",
   category: SERVICE_CATEGORIES[0],
   price: "",
   description: "",
@@ -231,12 +232,24 @@ export default function ServicesManager() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="serviceImage">Image URL</Label>
+          <Label htmlFor="serviceImages">Image URLs (one per line)</Label>
+          <textarea
+            id="serviceImages"
+            value={form.images}
+            onChange={(event) => updateField("images", event.target.value)}
+            rows={3}
+            placeholder={"https://images.example.com/one.jpg\nhttps://images.example.com/two.jpg"}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="serviceVendorId">Vendor ID (optional)</Label>
           <Input
-            id="serviceImage"
-            value={form.image}
-            onChange={(event) => updateField("image", event.target.value)}
-            placeholder="https://images.example.com/photo.jpg"
+            id="serviceVendorId"
+            value={form.vendorId}
+            onChange={(event) => updateField("vendorId", event.target.value)}
+            placeholder="Vendor account ID that owns this service"
             className="h-10 rounded-xl border-slate-200"
           />
         </div>
