@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminApiGuard } from "@/lib/admin";
 import { db } from "@/lib/db";
+import { serializeTransaction } from "@/lib/payments";
 
 export async function GET() {
   const guard = await adminApiGuard();
@@ -14,18 +15,6 @@ export async function GET() {
     .toArray();
 
   return NextResponse.json({
-    transactions: transactions.map((transaction) => ({
-      id: transaction._id.toString(),
-      customerName: transaction.customerName || "",
-      customerEmail: transaction.customerEmail || "",
-      vendorName: transaction.vendorName || "",
-      description: transaction.description || "",
-      amount: Number(transaction.amount) || 0,
-      currency: transaction.currency || "USD",
-      status: transaction.status || "pending",
-      createdAt: transaction.createdAt
-        ? new Date(transaction.createdAt).toISOString()
-        : null,
-    })),
+    transactions: transactions.map(serializeTransaction),
   });
 }

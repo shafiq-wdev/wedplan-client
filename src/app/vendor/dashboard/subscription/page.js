@@ -17,6 +17,17 @@ export default async function VendorSubscriptionPage() {
     (service) => service.status === "published"
   ).length;
   const plan = getVendorPlan(session.user);
+  const expiresAt = session.user.subscriptionExpiresAt
+    ? new Date(session.user.subscriptionExpiresAt)
+    : null;
+  const expiresAtLabel =
+    expiresAt && Number.isFinite(expiresAt.getTime())
+      ? expiresAt.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "";
 
   return (
     <DashboardShell
@@ -25,7 +36,11 @@ export default async function VendorSubscriptionPage() {
       description="Free vendors can publish up to 3 active services. Premium vendors get unlimited listings and a Premium badge."
       badge={plan === "premium" ? "Premium vendor" : "Free plan"}
     >
-      <VendorSubscriptionPlans currentPlan={plan} activeCount={activeCount} />
+      <VendorSubscriptionPlans
+        currentPlan={plan}
+        activeCount={activeCount}
+        expiresAtLabel={expiresAtLabel}
+      />
     </DashboardShell>
   );
 }

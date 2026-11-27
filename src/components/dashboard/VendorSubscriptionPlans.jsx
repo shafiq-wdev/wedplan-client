@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, Crown, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { Check, Crown, LoaderCircle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,39 @@ import { cn } from "cn";
 export default function VendorSubscriptionPlans({
   currentPlan = "free",
   activeCount = 0,
+  expiresAtLabel = "",
 }) {
-  const handleUpgrade = () => {
-    toast.info("Stripe Checkout will be available in the payment section.");
+  const [isStartingCheckout, setIsStartingCheckout] = useState(false);
+
+  const handleUpgrade = async () => {
+    setIsStartingCheckout(true);
+
+    try {
+      const response = await fetch("/api/payments/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: "premium" }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to start Stripe Checkout.");
+      }
+
+      if (!data.url) {
+        throw new Error("Stripe did not return a checkout URL.");
+      }
+
+      toast.success("Redirecting to Stripe Checkout...");
+      window.location.assign(data.url);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to start Stripe Checkout. Please try again."
+      );
+      setIsStartingCheckout(false);
+    }
   };
 
   return (
@@ -23,7 +54,9 @@ export default function VendorSubscriptionPlans({
         </p>
         <p className="mt-1 text-xs text-slate-500">
           {currentPlan === "premium"
-            ? "You can publish unlimited active services."
+            ? expiresAtLabel
+              ? `Premium access is active through ${expiresAtLabel}.`
+              : "You can publish unlimited active services."
             : `${activeCount} of 3 active services in use.`}
         </p>
       </div>
@@ -100,10 +133,17 @@ export default function VendorSubscriptionPlans({
                   <Button
                     type="button"
                     onClick={handleUpgrade}
+                    disabled={isStartingCheckout}
                     className="h-11 w-full rounded-xl bg-slate-900 text-white hover:bg-slate-800"
                   >
-                    <Crown className="mr-2 h-4 w-4" />
-                    Upgrade to Premium
+                    {isStartingCheckout ? (
+                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Crown className="mr-2 h-4 w-4" />
+                    )}
+                    {isStartingCheckout
+                      ? "Opening Stripe..."
+                      : "Upgrade to Premium"}
                   </Button>
                 ) : (
                   <div className="rounded-xl border border-slate-200 px-4 py-3 text-center text-sm text-slate-500">

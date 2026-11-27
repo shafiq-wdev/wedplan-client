@@ -99,7 +99,8 @@ const Footer = () => {
           <div>
             <Link href="/" className="group inline-flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 shadow-lg shadow-rose-500/25 transition duration-300 group-hover:rotate-6 group-hover:scale-105">
-                <Sparkles size={25} className="text-white" />
+                
+                <Heart size={23} fill="white" />
               </div>
 
               <span className="text-2xl font-extrabold tracking-tight">

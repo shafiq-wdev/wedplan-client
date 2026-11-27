@@ -73,6 +73,11 @@ export const auth = betterAuth({
         defaultValue: "free",
         input: false,
       },
+      subscriptionExpiresAt: {
+        type: "date",
+        required: false,
+        input: false,
+      },
     },
   },
 

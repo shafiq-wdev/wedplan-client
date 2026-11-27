@@ -25,8 +25,20 @@ export const VENDOR_PLANS = {
 
 export const FREE_PLAN_SERVICE_LIMIT = VENDOR_PLANS.free.maxActiveServices;
 
+export function hasActivePremium(user, now = new Date()) {
+  if (user?.subscriptionPlan !== "premium") return false;
+
+  const expiresAt = user.subscriptionExpiresAt;
+  if (!expiresAt) return true;
+
+  const expiresAtTime = new Date(expiresAt).getTime();
+  if (!Number.isFinite(expiresAtTime)) return true;
+
+  return expiresAtTime > now.getTime();
+}
+
 export function getVendorPlan(user) {
-  return user?.subscriptionPlan === "premium" ? "premium" : "free";
+  return hasActivePremium(user) ? "premium" : "free";
 }
 
 export function getVendorPlanDetails(user) {
