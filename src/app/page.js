@@ -12,8 +12,10 @@ import {
   Sparkles,
   Store,
   Users,
+  Wallet,
 } from "lucide-react";
 
+import Reveal from "@/components/home/Reveal";
 import CategoryIcon from "@/components/services/CategoryIcon";
 import ServiceCard from "@/components/services/ServiceCard";
 import { db } from "@/lib/db";
@@ -34,18 +36,52 @@ const steps = [
     description:
       "Browse curated photographers, venues, florists, caterers, stylists, and fashion houses.",
     icon: Search,
+    href: "/services",
   },
   {
     title: "Compare trusted vendors",
     description:
       "See pricing, location, and vendor details in one place before you reach out.",
     icon: Store,
+    href: "/services",
   },
   {
     title: "Plan with confidence",
     description:
       "Keep every shortlisted service and booking detail close to your wedding plan.",
     icon: CalendarHeart,
+    href: "/sign-up",
+  },
+];
+
+const benefits = [
+  {
+    title: "Approved, active listings",
+    description:
+      "Only reviewed services reach the marketplace, so every listing is ready for couples to explore.",
+    icon: BadgeCheck,
+    href: "/services",
+  },
+  {
+    title: "Clear pricing up front",
+    description:
+      "Compare starting prices, locations, and vendor details without chasing scattered links.",
+    icon: Wallet,
+    href: "/services",
+  },
+  {
+    title: "A dashboard for every role",
+    description:
+      "Customers, vendors, and admins each get a focused space with the right tools and permissions.",
+    icon: Users,
+    href: "/sign-up",
+  },
+  {
+    title: "Secure wedding planning",
+    description:
+      "Better Auth and server-side role checks keep accounts and protected actions in the right hands.",
+    icon: ShieldCheck,
+    href: "/sign-in",
   },
 ];
 
@@ -184,34 +220,36 @@ export default async function Home() {
         className="relative px-4 py-16 sm:py-20"
       >
         <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-rose-500 shadow-sm">
-                <Sparkles className="h-3.5 w-3.5" />
-                Featured Wedding Services
+          <Reveal>
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-rose-500 shadow-sm">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Featured Wedding Services
+                </div>
+
+                <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                  Handpicked vendors for your big day
+                </h2>
+
+                <p className="mt-3 text-sm leading-relaxed text-slate-500 sm:text-base">
+                  Approved, active listings from trusted WedPlan professionals —
+                  with photos, pricing, location, and vendor details up front.
+                </p>
               </div>
 
-              <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                Handpicked vendors for your big day
-              </h2>
-
-              <p className="mt-3 text-sm leading-relaxed text-slate-500 sm:text-base">
-                Approved, active listings from trusted WedPlan professionals —
-                with photos, pricing, location, and vendor details up front.
-              </p>
+              <Link
+                href="/services"
+                className="group inline-flex w-fit items-center gap-2 rounded-full border border-rose-200 bg-white px-5 py-2.5 text-sm font-semibold text-rose-600 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-50"
+              >
+                View all services
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
             </div>
-
-            <Link
-              href="/services"
-              className="group inline-flex w-fit items-center gap-2 rounded-full border border-rose-200 bg-white px-5 py-2.5 text-sm font-semibold text-rose-600 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-50"
-            >
-              View all services
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
+          </Reveal>
 
           {featuredServices.length > 0 ? (
-            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <Reveal className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" delay={0.1}>
               {featuredServices.map((service, index) => (
                 <ServiceCard
                   key={service.id}
@@ -219,27 +257,29 @@ export default async function Home() {
                   index={index}
                 />
               ))}
-            </div>
+            </Reveal>
           ) : (
-            <div className="mt-8 rounded-3xl border border-dashed border-rose-200 bg-white px-6 py-14 text-center shadow-sm">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-500">
-                <Store className="h-6 w-6" />
+            <Reveal className="mt-8">
+              <div className="rounded-3xl border border-dashed border-rose-200 bg-white px-6 py-14 text-center shadow-sm">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-500">
+                  <Store className="h-6 w-6" />
+                </div>
+                <h3 className="mt-4 text-lg font-semibold text-slate-900">
+                  New vendor listings are on the way
+                </h3>
+                <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
+                  Published services will appear here automatically. Admins can
+                  add and publish listings from the admin console.
+                </p>
+                <Link
+                  href="/services"
+                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-rose-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
+                >
+                  Browse services
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-slate-900">
-                New vendor listings are on the way
-              </h3>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
-                Published services will appear here automatically. Admins can
-                add and publish listings from the admin console.
-              </p>
-              <Link
-                href="/services"
-                className="mt-5 inline-flex items-center gap-2 rounded-full bg-rose-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
-              >
-                Browse services
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
+            </Reveal>
           )}
         </div>
       </section>
@@ -253,7 +293,7 @@ export default async function Home() {
         <div className="pointer-events-none absolute -right-24 bottom-10 h-72 w-72 rounded-full bg-amber-100/70 blur-3xl" />
 
         <div className="relative mx-auto max-w-6xl">
-          <div className="mx-auto max-w-2xl text-center">
+          <Reveal className="mx-auto max-w-2xl text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-rose-500 shadow-sm">
               <Heart className="h-3.5 w-3.5" />
               Wedding Service Categories
@@ -267,9 +307,9 @@ export default async function Home() {
               Choose a category to see the vendors and services that fit your
               wedding vision.
             </p>
-          </div>
+          </Reveal>
 
-          <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Reveal className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" delay={0.1}>
             {SERVICE_CATEGORY_META.map((category, index) => {
               const count = categoryCounts[category.label] || 0;
 
@@ -304,43 +344,107 @@ export default async function Home() {
                 </Link>
               );
             })}
-          </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Why choose WedPlan */}
+      <section
+        id="why-choose-wedplan"
+        className="relative overflow-hidden bg-[#1c0c15] px-4 py-16 sm:py-20"
+      >
+        <div className="pointer-events-none absolute -right-24 top-10 h-80 w-80 rounded-full bg-rose-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -left-20 bottom-0 h-72 w-72 rounded-full bg-amber-300/10 blur-3xl" />
+
+        <div className="relative mx-auto max-w-6xl">
+          <Reveal className="mx-auto max-w-2xl text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-rose-100 backdrop-blur">
+              <Sparkles className="h-3.5 w-3.5" />
+              Why Choose WedPlan?
+            </div>
+
+            <h2 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              A calmer way to plan the biggest day of your life
+            </h2>
+
+            <p className="mt-3 text-sm leading-relaxed text-rose-50/75 sm:text-base">
+              Everything you need to discover, compare, and organize wedding
+              services — built around trust, clarity, and role-based tools.
+            </p>
+          </Reveal>
+
+          <Reveal
+            className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+            delay={0.1}
+          >
+            {benefits.map((benefit, index) => {
+              const Icon = benefit.icon;
+
+              return (
+                <Link
+                  key={benefit.title}
+                  href={benefit.href}
+                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-rose-300/30 hover:bg-white/10"
+                  style={{ animationDelay: `${index * 60}ms` }}
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-950/40">
+                    <Icon className="h-5 w-5" />
+                  </span>
+
+                  <h3 className="mt-4 font-semibold text-white">
+                    {benefit.title}
+                  </h3>
+
+                  <p className="mt-1.5 text-sm leading-relaxed text-rose-50/65">
+                    {benefit.description}
+                  </p>
+
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-rose-200 transition group-hover:text-white">
+                    Explore
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </Link>
+              );
+            })}
+          </Reveal>
         </div>
       </section>
 
       {/* How it works */}
       <section id="how-it-works" className="px-4 pb-20">
         <div className="mx-auto max-w-6xl rounded-[2rem] border border-rose-100 bg-white p-6 shadow-sm shadow-rose-100/40 sm:p-10">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-rose-500">
-                <Users className="h-3.5 w-3.5" />
-                How WedPlan works
+          <Reveal>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-rose-500">
+                  <Users className="h-3.5 w-3.5" />
+                  How WedPlan works
+                </div>
+
+                <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                  From inspiration to “I do”, in three calm steps
+                </h2>
               </div>
 
-              <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                From inspiration to “I do”, in three calm steps
-              </h2>
+              <Link
+                href="/sign-up"
+                className="group inline-flex w-fit items-center gap-2 text-sm font-semibold text-rose-600 transition hover:text-rose-700"
+              >
+                Create your free account
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
             </div>
+          </Reveal>
 
-            <Link
-              href="/sign-up"
-              className="group inline-flex w-fit items-center gap-2 text-sm font-semibold text-rose-600 transition hover:text-rose-700"
-            >
-              Create your free account
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          <Reveal className="mt-8 grid gap-4 sm:grid-cols-3" delay={0.1}>
             {steps.map((step, index) => {
               const Icon = step.icon;
 
               return (
-                <article
+                <Link
                   key={step.title}
-                  className="animate-fade-up relative rounded-2xl border border-slate-100 bg-slate-50/60 p-5"
-                  style={{ animationDelay: `${index * 80}ms` }}
+                  href={step.href}
+                  className="group relative rounded-2xl border border-slate-100 bg-slate-50/60 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-rose-200 hover:bg-white hover:shadow-md hover:shadow-rose-100/60"
                 >
                   <span className="absolute right-4 top-4 text-4xl font-bold text-rose-100">
                     {index + 1}
@@ -357,10 +461,15 @@ export default async function Home() {
                   <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
                     {step.description}
                   </p>
-                </article>
+
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-rose-500">
+                    Continue
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </Link>
               );
             })}
-          </div>
+          </Reveal>
         </div>
       </section>
     </main>
