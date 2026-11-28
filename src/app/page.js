@@ -18,6 +18,8 @@ import {
 import Reveal from "@/components/home/Reveal";
 import CategoryIcon from "@/components/services/CategoryIcon";
 import ServiceCard from "@/components/services/ServiceCard";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "cn";
 import { db } from "@/lib/db";
 import {
   SERVICE_CATEGORY_META,
@@ -131,13 +133,10 @@ export default async function Home() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#2b0d1b]/95 via-[#3a1124]/75 to-[#140910]/95" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,113,133,0.28),transparent_55%)]" />
 
-        <div className="pointer-events-none absolute -left-24 bottom-0 h-80 w-80 animate-float-slower rounded-full border-[36px] border-white/10" />
-        <div className="pointer-events-none absolute -right-16 top-10 h-64 w-64 animate-float-slow rounded-full border-[28px] border-rose-200/15" />
         <div className="pointer-events-none absolute right-1/4 top-1/3 h-72 w-72 rounded-full bg-rose-500/20 blur-3xl" />
 
-        <Heart className="pointer-events-none absolute left-[9%] top-[24%] h-6 w-6 animate-float-slow text-rose-300/50" />
-        <Sparkles className="pointer-events-none absolute right-[12%] top-[20%] h-8 w-8 animate-pulse-soft text-amber-200/70" />
-        <Heart className="pointer-events-none absolute bottom-[22%] right-[16%] h-4 w-4 animate-float-slower text-rose-200/40" />
+        <Heart className="pointer-events-none absolute left-[9%] top-[24%] h-6 w-6 text-rose-300/40" />
+        <Sparkles className="pointer-events-none absolute right-[12%] top-[20%] h-8 w-8 text-amber-200/60" />
 
         <div className="relative mx-auto flex max-w-6xl flex-col items-center px-4 py-24 text-center sm:py-32 lg:py-36">
           <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-rose-100 backdrop-blur">
@@ -163,7 +162,10 @@ export default async function Home() {
           <div className="animate-fade-up animation-delay-300 mt-9 flex flex-col items-center gap-3 sm:flex-row">
             <Link
               href="/services"
-              className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 px-7 py-3.5 text-sm font-semibold text-white shadow-xl shadow-rose-900/40 transition-all duration-300 hover:-translate-y-0.5 hover:from-rose-400 hover:to-pink-400"
+              className={cn(
+                buttonVariants(),
+                "min-h-12 gap-2 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 px-7 text-sm font-semibold text-white shadow-xl shadow-rose-900/30 hover:from-rose-400 hover:to-pink-400"
+              )}
             >
               Explore Wedding Services
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -171,7 +173,10 @@ export default async function Home() {
 
             <Link
               href="/sign-up"
-              className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/20"
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "min-h-12 gap-2 rounded-full border-white/25 bg-white/10 px-7 text-sm font-semibold text-white backdrop-blur hover:bg-white/20 hover:text-white"
+              )}
             >
               <Heart className="h-4 w-4" />
               Join WedPlan
@@ -243,7 +248,10 @@ export default async function Home() {
 
               <Link
                 href="/services"
-                className="group inline-flex w-fit items-center gap-2 rounded-full border border-rose-200 bg-white px-5 py-2.5 text-sm font-semibold text-rose-600 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-50"
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "group min-h-11 w-fit gap-2 rounded-full border-rose-200 bg-white px-5 font-semibold text-rose-600 shadow-sm hover:border-rose-300 hover:bg-rose-50"
+                )}
               >
                 View all services
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -285,7 +293,10 @@ export default async function Home() {
                 </p>
                 <Link
                   href="/services"
-                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-rose-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
+                  className={cn(
+                    buttonVariants(),
+                    "mt-5 min-h-11 gap-2 rounded-full px-5 font-semibold"
+                  )}
                 >
                   Browse services
                   <ArrowRight className="h-4 w-4" />
@@ -322,15 +333,14 @@ export default async function Home() {
           </Reveal>
 
           <Reveal className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" delay={0.1}>
-            {SERVICE_CATEGORY_META.map((category, index) => {
+            {SERVICE_CATEGORY_META.map((category) => {
               const count = categoryCounts[category.label] || 0;
 
               return (
                 <Link
                   key={category.slug}
                   href={`/services?category=${category.slug}`}
-                  className="group relative animate-fade-up overflow-hidden rounded-3xl border border-rose-100 bg-white p-6 shadow-sm shadow-rose-100/40 transition-all duration-300 hover:-translate-y-1 hover:border-rose-200 hover:shadow-lg hover:shadow-rose-200/40"
-                  style={{ animationDelay: `${index * 60}ms` }}
+                  className="group relative overflow-hidden rounded-3xl border border-rose-100 bg-white p-6 shadow-sm shadow-rose-100/40 transition duration-300 hover:-translate-y-1 hover:border-rose-200 hover:shadow-lg hover:shadow-rose-200/40"
                 >
                   <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-rose-50 transition-transform duration-500 group-hover:scale-125" />
 
@@ -389,15 +399,14 @@ export default async function Home() {
             className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
             delay={0.1}
           >
-            {benefits.map((benefit, index) => {
+            {benefits.map((benefit) => {
               const Icon = benefit.icon;
 
               return (
                 <Link
                   key={benefit.title}
                   href={benefit.href}
-                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-rose-300/30 hover:bg-white/10"
-                  style={{ animationDelay: `${index * 60}ms` }}
+                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-rose-300/30 hover:bg-white/10"
                 >
                   <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-950/40">
                     <Icon className="h-5 w-5" />

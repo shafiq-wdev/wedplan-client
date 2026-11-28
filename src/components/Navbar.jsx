@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { cn } from "cn";
 
 import {
   Heart,
@@ -28,7 +29,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { authClient } from "@/lib/auth-client";
 import { clearBackendToken } from "@/lib/backend-auth";
 import { getDashboardPath, getRoleLabel } from "@/lib/roles";
@@ -42,24 +49,28 @@ const publicLinks = [
   },
 ];
 
-const isActive = (pathname, href) => pathname === href;
+const isActive = (pathname, href) =>
+  pathname === href || (href === "/services" && pathname.startsWith("/services/"));
 
 function NavLinks({ pathname, onNavigate, mobile = false }) {
   return (
     <>
       {publicLinks.map((link) => {
         const Icon = link.icon;
+        const active = isActive(pathname, link.href);
 
         return (
           <Link
             key={link.href}
             href={link.href}
             onClick={onNavigate}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-              isActive(pathname, link.href)
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
+              active
                 ? "bg-rose-50 text-rose-600"
-                : "text-gray-600 hover:bg-rose-50 hover:text-rose-600"
-            }`}
+                : "text-slate-600 hover:bg-rose-50 hover:text-rose-600"
+            )}
           >
             {mobile && <Icon size={18} />}
             {link.name}
@@ -120,15 +131,15 @@ export default function Navbar({ user: userProp = null, onLogout }) {
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white/95 backdrop-blur-md">
-      <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 w-full border-b border-rose-100 bg-white/95 backdrop-blur-md">
+      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 md:h-20 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500 text-white shadow-sm">
             <Heart size={23} fill="white" />
           </div>
 
-          <span className="text-2xl font-bold tracking-tight text-gray-900">
+          <span className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
             Wed<span className="text-rose-500">Plan</span>
           </span>
         </Link>
@@ -146,7 +157,8 @@ export default function Navbar({ user: userProp = null, onLogout }) {
                 href="/sign-in"
                 className={buttonVariants({
                   variant: "ghost",
-                  className: "font-semibold text-gray-700 hover:text-rose-600",
+                  className:
+                    "min-h-11 font-semibold text-slate-700 hover:text-rose-600",
                 })}
               >
                 Sign In
@@ -156,7 +168,7 @@ export default function Navbar({ user: userProp = null, onLogout }) {
                 href="/sign-up"
                 className={buttonVariants({
                   className:
-                    "rounded-full bg-rose-500 px-6 font-semibold text-white hover:bg-rose-600",
+                    "min-h-11 rounded-full bg-rose-500 px-6 font-semibold text-white hover:bg-rose-600",
                 })}
               >
                 Sign Up
@@ -164,7 +176,7 @@ export default function Navbar({ user: userProp = null, onLogout }) {
             </>
           ) : (
             <DropdownMenu open={open} onOpenChange={setOpen}>
-              <DropdownMenuTrigger className="flex h-auto items-center gap-2 rounded-full px-2 py-1.5 text-sm font-medium transition-colors hover:bg-rose-50">
+              <DropdownMenuTrigger className="flex min-h-11 items-center gap-2 rounded-full px-2 py-1.5 text-sm font-medium transition-colors hover:bg-rose-50">
                 <Avatar className="h-10 w-10 border-2 border-rose-100">
                   <AvatarImage src={profileImage} alt={displayName} />
                   <AvatarFallback className="bg-rose-100 font-semibold text-rose-600">
@@ -197,7 +209,7 @@ export default function Navbar({ user: userProp = null, onLogout }) {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem
-                  className="cursor-pointer py-2"
+                  className="min-h-11 cursor-pointer py-2"
                   render={<Link href={getDashboardPath(user.role)} />}
                 >
                   <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -205,7 +217,7 @@ export default function Navbar({ user: userProp = null, onLogout }) {
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
-                  className="cursor-pointer py-2"
+                  className="min-h-11 cursor-pointer py-2"
                   render={<Link href="/profile" />}
                 >
                   <UserRound className="mr-2 h-4 w-4" />
@@ -238,8 +250,15 @@ export default function Navbar({ user: userProp = null, onLogout }) {
           </Button>
 
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetContent side="right">
-              <nav className="flex flex-col gap-4 pt-8">
+            <SheetContent side="right" className="border-rose-100 bg-[#fffafb]">
+              <SheetHeader className="text-left">
+                <SheetTitle>WedPlan menu</SheetTitle>
+                <SheetDescription>
+                  Browse services or open your account workspace.
+                </SheetDescription>
+              </SheetHeader>
+
+              <nav className="flex flex-col gap-2 pt-6">
                 <NavLinks
                   pathname={pathname}
                   mobile
@@ -251,7 +270,7 @@ export default function Navbar({ user: userProp = null, onLogout }) {
                     <Link
                       href={getDashboardPath(user.role)}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-600"
+                      className="flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:bg-rose-50 hover:text-rose-600"
                     >
                       <LayoutDashboard size={18} />
                       Dashboard
@@ -260,7 +279,7 @@ export default function Navbar({ user: userProp = null, onLogout }) {
                     <Link
                       href="/profile"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-600"
+                      className="flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:bg-rose-50 hover:text-rose-600"
                     >
                       <UserRound size={18} />
                       Profile Settings
@@ -269,7 +288,7 @@ export default function Navbar({ user: userProp = null, onLogout }) {
                     <Button
                       variant="outline"
                       onClick={handleLogout}
-                      className="justify-start text-red-500"
+                      className="min-h-11 justify-start rounded-xl text-rose-600"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       Logout
@@ -280,7 +299,10 @@ export default function Navbar({ user: userProp = null, onLogout }) {
                     <Link
                       href="/sign-in"
                       onClick={() => setMobileMenuOpen(false)}
-                      className={buttonVariants({ variant: "outline" })}
+                      className={buttonVariants({
+                        variant: "outline",
+                        className: "min-h-11 rounded-xl",
+                      })}
                     >
                       Sign In
                     </Link>
@@ -289,7 +311,8 @@ export default function Navbar({ user: userProp = null, onLogout }) {
                       href="/sign-up"
                       onClick={() => setMobileMenuOpen(false)}
                       className={buttonVariants({
-                        className: "bg-rose-500 text-white hover:bg-rose-600",
+                        className:
+                          "min-h-11 rounded-xl bg-rose-500 text-white hover:bg-rose-600",
                       })}
                     >
                       Sign Up

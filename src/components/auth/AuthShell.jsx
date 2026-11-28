@@ -15,8 +15,6 @@ export default function AuthShell({
 
       <div className="relative mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] bg-white shadow-2xl shadow-rose-100/70 lg:grid-cols-[1.05fr_1fr]">
         <section className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-rose-500 via-pink-500 to-rose-600 p-10 text-white lg:flex xl:p-14">
-          <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 animate-float-slow rounded-full border-[40px] border-white/10" />
-          <div className="pointer-events-none absolute -bottom-24 -left-20 h-72 w-72 animate-float-slower rounded-full bg-white/10 blur-2xl" />
           <div className="pointer-events-none absolute right-10 top-1/3 h-24 w-24 rounded-full bg-white/10 blur-xl" />
 
           <Link href="/" className="relative z-10 flex items-center gap-3">

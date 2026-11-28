@@ -5,8 +5,13 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import ServiceExplorer from "@/components/services/ServiceExplorer";
 import { db } from "@/lib/db";
 import {
+  buildServiceFilter,
+  getServiceSort,
+  readPrice,
+  readQueryValue,
+} from "@/lib/service-query";
+import {
   getCategoryBySlug,
-  getCategoryQueryValues,
   normalizeCategory,
   serializeService,
   SERVICE_CATEGORY_META,
@@ -14,69 +19,21 @@ import {
 
 export const instant = false;
 
-function escapeRegex(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function readPrice(value) {
-  if (typeof value !== "string" || !/^\d+(?:\.\d+)?$/.test(value.trim())) {
-    return null;
-  }
-
-  const number = Number(value);
-  return Number.isFinite(number) ? number : null;
-}
-
 export default async function ServicesPage({ searchParams }) {
   await connection();
 
   const params = (await searchParams) ?? {};
-  const requestedCategory =
-    typeof params.category === "string" ? params.category : "";
-  const activeCategory = getCategoryBySlug(requestedCategory);
-  const initialQuery =
-    typeof params.q === "string" ? params.q.slice(0, 100) : "";
-  const requestedLocation =
-    typeof params.location === "string" ? params.location : "";
+  const activeCategory = getCategoryBySlug(readQueryValue(params.category));
+  const initialQuery = readQueryValue(params.q).slice(0, 100);
+  const requestedLocation = readQueryValue(params.location);
   const minPrice = readPrice(params.minPrice);
   const maxPrice = readPrice(params.maxPrice);
-  const sort =
-    params.sort === "price_asc" || params.sort === "price_desc"
-      ? params.sort
-      : "newest";
+  const sort = ["price_asc", "price_desc"].includes(readQueryValue(params.sort))
+    ? readQueryValue(params.sort)
+    : "newest";
 
-  const filter = { status: "published" };
-
-  if (activeCategory) {
-    filter.category = { $in: getCategoryQueryValues(activeCategory.label) };
-  }
-
-  if (requestedLocation) {
-    filter.location = requestedLocation;
-  }
-
-  const priceFilter = {};
-  if (minPrice !== null) priceFilter.$gte = minPrice;
-  if (maxPrice !== null) priceFilter.$lte = maxPrice;
-  if (Object.keys(priceFilter).length > 0) filter.price = priceFilter;
-
-  if (initialQuery) {
-    const regex = new RegExp(escapeRegex(initialQuery), "i");
-    filter.$or = [
-      { title: regex },
-      { description: regex },
-      { location: regex },
-      { vendorName: regex },
-      { vendorTagline: regex },
-      { category: regex },
-    ];
-  }
-
-  const sortOptions = {
-    newest: { createdAt: -1 },
-    price_asc: { price: 1, createdAt: -1 },
-    price_desc: { price: -1, createdAt: -1 },
-  };
+  const filter = buildServiceFilter(params);
+  const sortOptions = getServiceSort(sort);
 
   let allServices = [];
   let loadError = "";
@@ -85,7 +42,7 @@ export default async function ServicesPage({ searchParams }) {
     const matching = await db
       .collection("services")
       .find(filter)
-      .sort(sortOptions[sort])
+      .sort(sortOptions)
       .limit(200)
       .toArray();
 
@@ -131,7 +88,6 @@ export default async function ServicesPage({ searchParams }) {
     <main className="min-h-[calc(100vh-5rem)] bg-[#fff8fa] px-4 py-10 sm:py-14">
       <div className="mx-auto max-w-6xl space-y-8">
         <section className="relative animate-fade-up overflow-hidden rounded-[2rem] bg-gradient-to-br from-rose-500 via-pink-500 to-rose-600 p-8 text-white shadow-xl shadow-rose-200/60 sm:p-12">
-          <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 animate-float-slow rounded-full border-[40px] border-white/10" />
           <div className="pointer-events-none absolute -bottom-24 left-1/4 h-64 w-64 rounded-full bg-amber-200/20 blur-3xl" />
 
           <div className="relative z-10 max-w-2xl">

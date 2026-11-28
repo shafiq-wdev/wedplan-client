@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import BackToTop from "@/components/feedback/BackToTop";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "cn";
 
 import {
   Sparkles,
@@ -84,13 +86,13 @@ const Footer = () => {
 
             <Link
               href="/services"
-              className="group inline-flex shrink-0 items-center gap-3 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 px-7 py-4 text-sm font-semibold text-white shadow-lg shadow-rose-500/20 transition duration-300 hover:-translate-y-1 hover:shadow-rose-500/40"
+              className={cn(
+                buttonVariants(),
+                "group min-h-12 shrink-0 gap-3 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 px-7 text-sm font-semibold text-white shadow-lg shadow-rose-500/20 hover:shadow-rose-500/30"
+              )}
             >
               Explore Services
-              <ArrowUpRight
-                size={18}
-                className="transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1"
-              />
+              <ArrowUpRight size={18} />
             </Link>
           </div>
         </div>
@@ -100,8 +102,7 @@ const Footer = () => {
           {/* Brand Column */}
           <div>
             <Link href="/" className="group inline-flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 shadow-lg shadow-rose-500/25 transition duration-300 group-hover:rotate-6 group-hover:scale-105">
-                
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 shadow-lg shadow-rose-500/25">
                 <Heart size={23} fill="white" />
               </div>
 
@@ -123,7 +124,8 @@ const Footer = () => {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-medium text-gray-400 transition-all duration-300 hover:-translate-y-1 hover:border-rose-400/40 hover:bg-rose-500 hover:text-white"
+                  aria-label={`WedPlan on ${social.name}`}
+                  className="min-h-11 rounded-xl border border-white/10 bg-white/[0.04] px-4 text-xs font-medium text-gray-400 transition-colors hover:border-rose-400/40 hover:bg-rose-500 hover:text-white"
                 >
                   {social.name}
                 </a>

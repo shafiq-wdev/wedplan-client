@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import ConfirmDialog from "@/components/feedback/ConfirmDialog";
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +64,7 @@ export default function CustomerBookingsManager({ initialBookings = [] }) {
   const [bookings, setBookings] = useState(initialBookings);
   const [busyId, setBusyId] = useState("");
   const [expandedId, setExpandedId] = useState("");
+  const [pendingCancel, setPendingCancel] = useState(null);
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
 
@@ -312,7 +314,7 @@ export default function CustomerBookingsManager({ initialBookings = [] }) {
                         type="button"
                         variant="destructive"
                         size="sm"
-                        onClick={() => cancelBooking(booking)}
+                        onClick={() => setPendingCancel(booking)}
                         disabled={busy}
                         className="flex-1 rounded-xl"
                       >
@@ -377,6 +379,24 @@ export default function CustomerBookingsManager({ initialBookings = [] }) {
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(pendingCancel)}
+        onOpenChange={(open) => {
+          if (!open) setPendingCancel(null);
+        }}
+        title="Cancel this booking request?"
+        description={
+          pendingCancel
+            ? `Your request for ${pendingCancel.serviceName} will be cancelled. The vendor will no longer receive a response from you.`
+            : "This action cannot be undone."
+        }
+        confirmLabel="Cancel request"
+        busy={Boolean(pendingCancel) && busyId === pendingCancel.id}
+        onConfirm={() =>
+          pendingCancel ? cancelBooking(pendingCancel) : Promise.resolve()
+        }
+      />
     </div>
   );
 }

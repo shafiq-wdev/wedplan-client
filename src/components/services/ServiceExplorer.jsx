@@ -16,12 +16,14 @@ import {
 
 import CategoryIcon from "@/components/services/CategoryIcon";
 import ServiceCard from "@/components/services/ServiceCard";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "cn";
 
-const SORT_OPTIONS = [
-  { value: "newest", label: "Newest first" },
-  { value: "price_asc", label: "Price: low to high" },
-  { value: "price_desc", label: "Price: high to low" },
-];
+import { SORT_OPTIONS } from "@/lib/service-query";
+
+const CONTROL_CLASS =
+  "h-11 rounded-xl border-rose-100 bg-rose-50/40 text-sm text-slate-700 placeholder:text-slate-400 focus-visible:border-rose-300 focus-visible:bg-white focus-visible:ring-3 focus-visible:ring-rose-100";
 
 function buildParams({ query, category, location, minPrice, maxPrice, sort }) {
   const params = new URLSearchParams();
@@ -196,14 +198,16 @@ export default function ServiceExplorer({
           className="flex flex-col gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 sm:flex-row sm:items-center sm:justify-between"
         >
           <span>{loadError}</span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => router.refresh()}
-            className="inline-flex items-center gap-1.5 self-start font-semibold underline underline-offset-2"
+            className="self-start rounded-lg font-semibold text-rose-600 hover:bg-rose-100 hover:text-rose-700"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Retry
-          </button>
+          </Button>
         </div>
       ) : null}
 
@@ -212,12 +216,12 @@ export default function ServiceExplorer({
           <label className="relative flex-1">
             <span className="sr-only">Search wedding services</span>
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-400" />
-            <input
+            <Input
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search by service, vendor, or location..."
-              className="w-full rounded-2xl border border-rose-100 bg-rose-50/40 py-3 pl-11 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100"
+              className={cn(CONTROL_CLASS, "w-full rounded-2xl pl-11 pr-4")}
             />
           </label>
 
@@ -227,7 +231,7 @@ export default function ServiceExplorer({
             <select
               value={location}
               onChange={(event) => setLocation(event.target.value)}
-              className="w-full appearance-none rounded-2xl border border-rose-100 bg-rose-50/40 py-3 pl-11 pr-10 text-sm font-medium text-slate-700 outline-none transition focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100"
+              className={cn(CONTROL_CLASS, "w-full appearance-none rounded-2xl pl-11 pr-10 font-medium")}
             >
               <option value="">All locations</option>
               {locations.map((item) => (
@@ -257,7 +261,7 @@ export default function ServiceExplorer({
               value={minPrice}
               onChange={(event) => setMinPrice(event.target.value)}
               placeholder="Min"
-              className="h-10 w-24 rounded-xl border border-rose-100 bg-rose-50/40 px-3 text-sm text-slate-700 outline-none transition focus:border-rose-300 focus:bg-white focus:ring-2 focus:ring-rose-100"
+              className={cn(CONTROL_CLASS, "w-24 px-3")}
             />
             <span className="text-slate-300">—</span>
             <label className="sr-only" htmlFor="maxPrice">
@@ -271,7 +275,7 @@ export default function ServiceExplorer({
               value={maxPrice}
               onChange={(event) => setMaxPrice(event.target.value)}
               placeholder="Max"
-              className="h-10 w-24 rounded-xl border border-rose-100 bg-rose-50/40 px-3 text-sm text-slate-700 outline-none transition focus:border-rose-300 focus:bg-white focus:ring-2 focus:ring-rose-100"
+              className={cn(CONTROL_CLASS, "w-24 px-3")}
             />
           </div>
 
@@ -280,7 +284,7 @@ export default function ServiceExplorer({
             <select
               value={sort}
               onChange={(event) => setSort(event.target.value)}
-              className="h-10 w-full appearance-none rounded-xl border border-rose-100 bg-rose-50/40 px-3 pr-9 text-sm font-medium text-slate-700 outline-none transition focus:border-rose-300 focus:bg-white focus:ring-2 focus:ring-rose-100"
+              className={cn(CONTROL_CLASS, "w-full appearance-none px-3 pr-9 font-medium")}
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -292,61 +296,66 @@ export default function ServiceExplorer({
           </label>
 
           {hasFilters && (
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={clearFilters}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-100 bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:border-rose-200 hover:bg-rose-50"
+              className="min-h-11 rounded-xl border-rose-200 px-4 font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700"
             >
               <X className="h-4 w-4" />
               Clear
-            </button>
+            </Button>
           )}
         </div>
 
-        <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-1">
-          <button
+        <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-2">
+          <Button
             type="button"
+            variant={category ? "secondary" : "default"}
+            aria-pressed={!category}
             onClick={() => setCategory("")}
-            className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
-              category
-                ? "bg-rose-50 text-rose-600 hover:bg-rose-100"
-                : "bg-rose-500 text-white shadow-sm shadow-rose-200"
-            }`}
+            className={cn(
+              "min-h-11 shrink-0 rounded-full px-4 font-semibold",
+              !category && "shadow-sm shadow-rose-200"
+            )}
           >
             All services
             <span
-              className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+              className={cn(
+                "rounded-full px-1.5 py-0.5 text-[10px] font-bold",
                 category ? "bg-white text-rose-500" : "bg-white/20 text-white"
-              }`}
+              )}
             >
               {services.length}
             </span>
-          </button>
+          </Button>
 
           {categories.map((item) => {
             const active = category === item.slug;
 
             return (
-              <button
+              <Button
                 key={item.slug}
                 type="button"
+                variant={active ? "default" : "secondary"}
+                aria-pressed={active}
                 onClick={() => setCategory(item.slug)}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  active
-                    ? "bg-rose-500 text-white shadow-sm shadow-rose-200"
-                    : "bg-rose-50 text-rose-600 hover:bg-rose-100"
-                }`}
+                className={cn(
+                  "min-h-11 shrink-0 gap-2 rounded-full px-4 font-semibold",
+                  active && "shadow-sm shadow-rose-200"
+                )}
               >
                 <CategoryIcon category={item.label} className="h-4 w-4" />
                 {item.label}
                 <span
-                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                  className={cn(
+                    "rounded-full px-1.5 py-0.5 text-[10px] font-bold",
                     active ? "bg-white/20 text-white" : "bg-white text-rose-500"
-                  }`}
+                  )}
                 >
                   {item.count}
                 </span>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -361,7 +370,10 @@ export default function ServiceExplorer({
           <p className="mt-1 text-sm text-slate-500">{description}</p>
         </div>
 
-        <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-rose-500">
+        <div
+          aria-live="polite"
+          className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-rose-500"
+        >
           {isPending && (
             <span className="inline-flex items-center gap-1.5 normal-case tracking-normal text-slate-500">
               <LoaderCircle className="h-3.5 w-3.5 animate-spin text-rose-500" />
@@ -404,14 +416,14 @@ export default function ServiceExplorer({
           </p>
 
           {hasFilters && (
-            <button
+            <Button
               type="button"
               onClick={clearFilters}
-              className="mt-5 inline-flex items-center gap-2 rounded-full bg-rose-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
+              className="mt-5 min-h-11 rounded-full px-5 font-semibold"
             >
               <X className="h-4 w-4" />
               Clear filters
-            </button>
+            </Button>
           )}
         </div>
       )}

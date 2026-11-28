@@ -8,6 +8,7 @@ import {
   Users,
 } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
+import DashboardSectionHeading from "@/components/dashboard/DashboardSectionHeading";
 import StatCard from "@/components/dashboard/StatCard";
 import { requireAdminPage } from "@/lib/admin";
 import { db } from "@/lib/db";
@@ -160,6 +161,11 @@ export default async function AdminDashboardPage() {
       title={`Welcome, ${session.user.name?.split(" ")[0] || "Admin"}`}
       description="Manage users, review published services, and monitor platform transactions from one secure console."
     >
+      <DashboardSectionHeading
+        title="Platform overview"
+        description="Live counts from users, services, and transactions."
+      />
+
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat) => (
           <StatCard
@@ -172,6 +178,11 @@ export default async function AdminDashboardPage() {
           />
         ))}
       </section>
+
+      <DashboardSectionHeading
+        title="Quick actions"
+        description="Jump directly into the tools you use most."
+      />
 
       <section className="grid gap-4 sm:grid-cols-2">
         {capabilities.map((capability, index) => {

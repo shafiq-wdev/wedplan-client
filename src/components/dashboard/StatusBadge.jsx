@@ -22,10 +22,11 @@ export default function StatusBadge({ status, children }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold capitalize ring-1 ring-inset",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold capitalize ring-1 ring-inset",
         statusStyles[value] ?? "bg-slate-100 text-slate-600 ring-slate-200"
       )}
     >
+      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
       {children ?? value}
     </span>
   );

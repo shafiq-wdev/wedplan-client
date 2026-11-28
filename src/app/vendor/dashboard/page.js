@@ -9,6 +9,7 @@ import {
   Store,
 } from "lucide-react";
 
+import DashboardSectionHeading from "@/components/dashboard/DashboardSectionHeading";
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import StatCard from "@/components/dashboard/StatCard";
 import StatusBadge from "@/components/dashboard/StatusBadge";
@@ -128,22 +129,11 @@ export default async function VendorDashboardPage() {
       </section>
 
       <section className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">Recent services</h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Approval status updates after an admin reviews your listing.
-            </p>
-          </div>
-
-          <Link
-            href="/vendor/dashboard/services"
-            className="inline-flex items-center gap-1 text-sm font-semibold text-rose-500 transition hover:text-rose-600"
-          >
-            View all
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
+        <DashboardSectionHeading
+          title="Recent services"
+          description="Approval status updates after an admin reviews your listing."
+          href="/vendor/dashboard/services"
+        />
 
         {services.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-rose-200 bg-white p-8 text-center">
@@ -194,14 +184,10 @@ export default async function VendorDashboardPage() {
       </section>
 
       <section className="space-y-4">
-        <div>
-          <h2 className="text-lg font-bold text-slate-900">
-            Recent booking requests
-          </h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Accept or reject pending requests for your services.
-          </p>
-        </div>
+        <DashboardSectionHeading
+          title="Recent booking requests"
+          description="Accept or reject pending requests for your services."
+        />
 
         <VendorBookingsManager initialBookings={bookings.slice(0, 3)} />
       </section>

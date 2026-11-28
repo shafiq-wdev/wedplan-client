@@ -13,6 +13,34 @@ const LEGACY_CATEGORY_MAP = {
 const pexels = (id, width = 1200) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${width}`;
 
+const DEMO_VENDOR_EMAIL = "vendor.demo@wedplan.local";
+
+async function resolveDemoVendor(db, now) {
+  const users = db.collection("user");
+  const vendor =
+    (await users.findOne({ role: "vendor" })) ||
+    (await users.findOne({ email: DEMO_VENDOR_EMAIL }));
+
+  if (vendor) {
+    return String(vendor._id || vendor.id || "");
+  }
+
+  const result = await users.insertOne({
+    name: "WedPlan Demo Vendor",
+    email: DEMO_VENDOR_EMAIL,
+    image: "",
+    role: "vendor",
+    isBlocked: false,
+    businessName: "WedPlan Demo Studio",
+    subscriptionPlan: "free",
+    subscriptionExpiresAt: null,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  return String(result.insertedId);
+}
+
 const demoServices = [
   {
     title: "Golden Hour Wedding Photography",
@@ -149,6 +177,11 @@ async function main() {
     const db = client.db(process.env.BETTER_AUTH_DB_NAME || "wedplandb");
     const services = db.collection("services");
     const now = new Date();
+    const vendorId = await resolveDemoVendor(db, now);
+
+    if (!vendorId) {
+      throw new Error("Unable to resolve a vendor for the demo services.");
+    }
 
     let created = 0;
     let updated = 0;
@@ -157,7 +190,7 @@ async function main() {
       const document = {
         ...service,
         serviceName: service.serviceName || service.title,
-        vendorId: service.vendorId || "",
+        vendorId: service.vendorId || vendorId,
       };
       const existing = await services.findOne({ title: document.title });
 

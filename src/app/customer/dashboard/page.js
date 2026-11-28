@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import {
-  ArrowRight,
   CalendarCheck,
   CalendarClock,
   CircleX,
@@ -10,6 +9,7 @@ import {
 } from "lucide-react";
 
 import CustomerBookingsManager from "@/components/dashboard/CustomerBookingsManager";
+import DashboardSectionHeading from "@/components/dashboard/DashboardSectionHeading";
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import StatCard from "@/components/dashboard/StatCard";
 import { buttonVariants } from "@/components/ui/button";
@@ -88,25 +88,11 @@ export default async function CustomerDashboardPage() {
       </section>
 
       <section className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">
-              Recent booking requests
-            </h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Your three latest enquiries. You can cancel requests that are
-              still pending.
-            </p>
-          </div>
-
-          <Link
-            href="/customer/dashboard/bookings"
-            className="inline-flex items-center gap-1 text-sm font-semibold text-rose-500 transition hover:text-rose-600"
-          >
-            View all
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
+        <DashboardSectionHeading
+          title="Recent booking requests"
+          description="Your three latest enquiries. You can cancel requests that are still pending."
+          href="/customer/dashboard/bookings"
+        />
 
         <CustomerBookingsManager initialBookings={bookings.slice(0, 3)} />
       </section>

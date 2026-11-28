@@ -28,11 +28,18 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <a
+          href="#main-content"
+          className="sr-only rounded-full bg-rose-500 px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100]"
+        >
+          Skip to main content
+        </a>
         <Navbar />
-        {children}
-         <Toaster position="top-right" richColors />
-         <Footer />
-
+        <div id="main-content" className="flex-1">
+          {children}
+        </div>
+        <Toaster position="top-right" richColors />
+        <Footer />
       </body>
     </html>
   );

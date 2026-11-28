@@ -2,6 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, MapPin, Sparkles } from "lucide-react";
 
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "cn";
+
 function formatPrice(price) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -22,12 +25,9 @@ function vendorInitials(name) {
   );
 }
 
-export default function ServiceCard({ service, index = 0 }) {
+export default function ServiceCard({ service }) {
   return (
-    <article
-      className="group flex animate-fade-up flex-col overflow-hidden rounded-3xl border border-rose-100/80 bg-white shadow-sm shadow-rose-100/50 transition-all duration-300 hover:-translate-y-1.5 hover:border-rose-200 hover:shadow-xl hover:shadow-rose-200/50"
-      style={{ animationDelay: `${index * 70}ms` }}
-    >
+    <article className="group flex flex-col overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-sm shadow-rose-100/50 transition duration-300 hover:-translate-y-1 hover:border-rose-200 hover:shadow-lg hover:shadow-rose-200/50">
       <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-rose-200 via-pink-200 to-amber-100">
         {service.image ? (
           <Image
@@ -98,7 +98,10 @@ export default function ServiceCard({ service, index = 0 }) {
 
         <Link
           href={`/services/${service.id}`}
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-rose-200 bg-rose-50/60 px-4 py-2.5 text-sm font-semibold text-rose-600 transition-colors hover:border-rose-300 hover:bg-rose-500 hover:text-white"
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "mt-4 min-h-11 w-full rounded-full border-rose-200 bg-rose-50/60 font-semibold text-rose-600 hover:border-rose-300 hover:bg-rose-500 hover:text-white"
+          )}
         >
           View Details
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />

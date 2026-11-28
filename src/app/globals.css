@@ -10,6 +10,10 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
+  --color-wedding-rose: var(--wedding-rose);
+  --color-wedding-accent: var(--wedding-accent);
+  --color-wedding-blush: var(--wedding-blush);
+  --color-wedding-ink: var(--wedding-ink);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,38 +53,43 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --wedding-rose: #9f1239;
+  --wedding-accent: #e11d48;
+  --wedding-blush: #fff7f8;
+  --wedding-ink: #1e293b;
+
+  --background: #fffdfd;
+  --foreground: var(--wedding-ink);
+  --card: #ffffff;
+  --card-foreground: var(--wedding-ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--wedding-ink);
+  --primary: var(--wedding-rose);
+  --primary-foreground: #ffffff;
+  --secondary: #fff1f2;
+  --secondary-foreground: #881337;
+  --muted: #fff1f2;
+  --muted-foreground: #64748b;
+  --accent: #fff1f2;
+  --accent-foreground: var(--wedding-rose);
+  --destructive: #be123c;
+  --border: #f1e4e8;
+  --input: #f1e4e8;
+  --ring: var(--wedding-accent);
+  --chart-1: #fb7185;
+  --chart-2: #f59e0b;
+  --chart-3: #10b981;
+  --chart-4: #6366f1;
+  --chart-5: #9f1239;
+  --radius: 0.75rem;
+  --sidebar: var(--wedding-blush);
+  --sidebar-foreground: var(--wedding-ink);
+  --sidebar-primary: var(--wedding-rose);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fff1f2;
+  --sidebar-accent-foreground: var(--wedding-rose);
+  --sidebar-border: #f1e4e8;
+  --sidebar-ring: var(--wedding-accent);
 }
 
 .dark {
@@ -90,29 +99,29 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --primary: #fb7185;
+  --primary-foreground: #4c0519;
+  --secondary: #3f1d2b;
+  --secondary-foreground: #fff1f2;
+  --muted: #3f1d2b;
+  --muted-foreground: #fda4af;
+  --accent: #3f1d2b;
+  --accent-foreground: #fecdd3;
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --ring: #fb7185;
+  --chart-1: #fb7185;
+  --chart-2: #f59e0b;
+  --chart-3: #34d399;
+  --chart-4: #a5b4fc;
+  --chart-5: #fda4af;
+  --sidebar: #25131b;
+  --sidebar-foreground: #fff1f2;
+  --sidebar-primary: #fb7185;
+  --sidebar-primary-foreground: #4c0519;
+  --sidebar-accent: #3f1d2b;
+  --sidebar-accent-foreground: #fecdd3;
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
@@ -126,6 +135,16 @@
   }
   html {
     @apply font-sans;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid var(--wedding-accent);
+    outline-offset: 2px;
   }
 }
 
@@ -223,6 +242,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
   .animate-fade-up,
   .animate-fade-in,
   .animate-float-slow,
